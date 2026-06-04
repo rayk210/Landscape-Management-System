@@ -1,2 +1,0 @@
-1#Raymond Krajcsi#123 Indigo rd. Sabittown, NJ 30302#grass#39.0#50.0#9750.0
-2#Echa Krajcsi#123 Biru rd. Harapan Jaya, Ind 3030#gravel#90.0#80.0#14400.0
