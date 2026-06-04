@@ -4,6 +4,7 @@ package view;
 import util.DataIO;
 import dao.CustomerDB;
 import model.Customer;
+import service.CustomerService;
 import java.net.URL;
 import java.util.ArrayList;
 import javax.swing.DefaultListModel;
@@ -32,14 +33,18 @@ public class LandscapeGUI extends javax.swing.JFrame {
     private final double GRAVEL_PER_SQFT = 2.0;
     DefaultListModel<Customer> customerList;
     DefaultTableModel customerTableModel;
+    private CustomerService service;
     
     /**
      * Creates new form LandscapeGUI
      */
     public LandscapeGUI() {
         
+        // instantiate variables
         customerList = new DefaultListModel<>();
         customerTableModel = new DefaultTableModel();
+        service = new CustomerService();
+        
         initComponents();
         
         loadList();
@@ -592,16 +597,13 @@ public class LandscapeGUI extends javax.swing.JFrame {
             return;
         }
         
-        // create customerDB object
-        CustomerDB data = new CustomerDB();
-        
         // get customers name
         int customerID = cust.getCustomerID();
         
         JOptionPane.showMessageDialog(this, "Customer: " + cust + " has been deleted with ID: " + customerID);
         
         // delete customer by name
-        data.delete(customerID);
+        service.deleteCustomer(customerID);
         
         // clear customer details text area
         txaCustomerDetails.setText("");
@@ -632,20 +634,21 @@ public class LandscapeGUI extends javax.swing.JFrame {
 
     private void btnSaveToCSVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveToCSVActionPerformed
         // get filename from user
-        String fileName = JOptionPane.showInputDialog(this, "Enter filename");
-       
-        // create array list hold table model customers
+        String filename = JOptionPane.showInputDialog(this, "Enter filename");
+        
+        // create DataIO object and pass in filename
+        DataIO data = new DataIO(filename);
+        
+        // instantiate an array list to hold table model contents
         ArrayList<Customer> custList = new ArrayList<>();
         
-        // create DataIO object
-        DataIO data = new DataIO(fileName);
-        
-        // get default table model from JTable
+        // get model table from JTable
         customerTableModel = (DefaultTableModel) tblCustomerTable.getModel();
         
-        // extract data from customer table model
         for (int i = 0; i < customerTableModel.getRowCount(); i++) {
-            int customerID = (Integer) customerTableModel.getValueAt(i, 0);
+            
+            // extract values into variables
+            int id = (Integer) customerTableModel.getValueAt(i, 0);
             String name = (String) customerTableModel.getValueAt(i, 1);
             String address = (String) customerTableModel.getValueAt(i, 2);
             String yardType = (String) customerTableModel.getValueAt(i, 3);
@@ -653,15 +656,15 @@ public class LandscapeGUI extends javax.swing.JFrame {
             double length = (Double) customerTableModel.getValueAt(i, 5);
             double totalCost = (Double) customerTableModel.getValueAt(i, 6);
             
-            // add data to array list
-            custList.add(new Customer(customerID, name, address, yardType, width, length, totalCost));
+            // add fields to array list
+            custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
         }
-        // save data to file
-        boolean isSaved = data.add(custList);
-        
-        if (isSaved == true) {
-            JOptionPane.showMessageDialog(this, "File Successfully Saved!");
-        }
+        // pass the populated arraylist into the 'add' method to be saved
+       boolean savedData = data.add(custList);
+       
+       if (savedData == true) {
+           JOptionPane.showMessageDialog(this, "Data successfully saved!");
+       }
     }//GEN-LAST:event_btnSaveToCSVActionPerformed
 
     /**
@@ -782,6 +785,14 @@ public class LandscapeGUI extends javax.swing.JFrame {
             }
         }
         
+        // verify name contains only letters
+        if (txtName.getText().matches(".*[^A-Za-z ].*")) {
+            JOptionPane.showMessageDialog(this, "Name must be characters", "Error", JOptionPane.ERROR_MESSAGE);
+            txtName.setText("");
+            txtName.requestFocus();
+            return false;
+        }
+        
         // validate that width and length are postive numbers or decimals
         JTextField[] jFields = {txtWidth, txtLength};
         String[] jNames = {"Width", "Length"};
@@ -864,11 +875,11 @@ public class LandscapeGUI extends javax.swing.JFrame {
         
         if (rdoGrass.isSelected()) {
             yardType = "grass";
-            totalCost = GRASS_PER_SQFT * width * length;
+            totalCost = service.calculateTotalCost(yardType, width, length);
         }
         else if (rdoGravel.isSelected()) {
             yardType = "gravel";
-            totalCost = GRAVEL_PER_SQFT * width * length;
+            totalCost = service.calculateTotalCost(yardType, width, length);
         }
         else {
             JOptionPane.showMessageDialog(this, "Yard type is required", "Error", JOptionPane.ERROR_MESSAGE);
@@ -891,21 +902,11 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // create customer
         Customer cust = createCustomer();
         
-        /*
-        // create data object     
-        DataIO data = new DataIO();
-        data.add(cust);
-        */
-        
-        // create customerDB object
-        CustomerDB data = new CustomerDB();
-        data.add(cust);
+        // add customer
+        service.addCustomer(cust);
         
         // load latest customer list
         loadList();
-        
-        // add customer to customer list model
-        //customerList.addElement(cust);
         
         // reset form for next customer
         reset();
@@ -915,20 +916,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
     }
 
     private void loadList() {
-        
-        /*
-        // create DataIO object
-        DataIO data = new DataIO();
-        
-        // pull file info into array list
-        ArrayList<Customer> custList = data.getList();
-        */
-        
-        // create customerDB object
-        CustomerDB data = new CustomerDB();
-        
         // pull query results from DB info into array list
-        ArrayList<Customer> custList = data.getList();
+        ArrayList<Customer> custList = service.getAllCustomers();
         
         // clear model list
         customerList.clear();
@@ -936,24 +925,22 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // clear customer text area
         txaCustomerDetails.setText("");
         
-        // get customers from each index within array list
-        for (int i = 0; i < custList.size(); i++) {
-            Customer cust = custList.get(i);
-            
-            // add customers to model from array list
+        // iterate through customer array list and add element to list model
+        for (Customer cust : custList) {
             customerList.addElement(cust);
         }
         
         // displaying customer list on JTable
-        // create column names
-        String[] columns = {"ID", "Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
+        // create columns for table model
+        String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Height", "Total Cost"};
         
-        // set columns on default table model
+        // set columns on table model
         customerTableModel = new DefaultTableModel(columns, 0);
         
-        // create row for each customers
+        // iterate through customer list array and create rows of table model
         for (Customer cust : custList) {
             
+            // create rows
             Object[] rows = new Object[] {
                 cust.getCustomerID(),
                 cust.getName(),
@@ -966,7 +953,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
             // add rows to table model
             customerTableModel.addRow(rows);
         }
-        // set customer model on JTable
+        // set customer table model as model on JTable
         tblCustomerTable.setModel(customerTableModel);
     }
 }

@@ -35,25 +35,18 @@ public class CustomerDB {
             // create prepared statement
             PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
             
-            String name = cust.getName();
-            String address = cust.getAddress();
-            String yardType = cust.getYardType();
-            double width = cust.getWidth();
-            double length = cust.getLength();
-            double totalCost = cust.getTotalCost();
-            
             // set values for statement
-            pStmt.setString(1,name);
-            pStmt.setString(2, address);
-            pStmt.setString(3, yardType);
-            pStmt.setDouble(4, width);
-            pStmt.setDouble(5, length);
-            pStmt.setDouble(6, totalCost);
+            pStmt.setString(1, cust.getName());
+            pStmt.setString(2, cust.getAddress());
+            pStmt.setString(3, cust.getYardType());
+            pStmt.setDouble(4, cust.getWidth());
+            pStmt.setDouble(5, cust.getLength());
+            pStmt.setDouble(6, cust.getTotalCost());
             
             // execute statement
-            int rs = pStmt.executeUpdate();
+            int rowsAffected = pStmt.executeUpdate();
             
-            if (rs > 0) {
+            if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(null, "Insert Successful!");
             }
             
@@ -123,9 +116,9 @@ public class CustomerDB {
             pStmt.setInt(1, customerID);
             
             // execute statement
-            int rs = pStmt.executeUpdate();
+            int rowsAffected = pStmt.executeUpdate();
             
-            if (rs > 0) {
+            if (rowsAffected > 0) {
                 JOptionPane.showMessageDialog(null, "Customer Deleted!");
             }
             // close connection
