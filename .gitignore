@@ -1,0 +1,12 @@
+# NetBeans build output
+build/
+dist/
+
+# NetBeans project settings (local user, not source code)
+nbproject/private/
+
+# compiled Java classes
+*.class
+
+# logs
+*.log
