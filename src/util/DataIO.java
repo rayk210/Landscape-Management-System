@@ -2,6 +2,7 @@ package util;
 
 
 import model.Customer;
+import enums.YardType;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -104,12 +105,13 @@ public class DataIO {
                 String name = tokens.nextToken();
                 String address = tokens.nextToken();
                 String yardType = tokens.nextToken();
+                YardType type = YardType.valueOf(yardType);
                 double width = Double.parseDouble(tokens.nextToken());
                 double length = Double.parseDouble(tokens.nextToken());
                 double totalCost = Double.parseDouble(tokens.nextToken());
                 
                 // add fields to array list
-                custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
+                custList.add(new Customer(id, name, address, type, width, length, totalCost));
                 
                 // if inLine is null, stop reading
                 inLine = inBuffer.readLine();

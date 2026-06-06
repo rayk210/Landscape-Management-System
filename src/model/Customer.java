@@ -2,6 +2,7 @@ package model;
 
 
 import java.text.DecimalFormat;
+import enums.YardType;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -18,7 +19,7 @@ public class Customer {
     private int customerID;
     private String name;
     private String address;
-    private String yardType;
+    private YardType yardType;
     private double width;
     private double length;
     private double totalCost;
@@ -28,13 +29,13 @@ public class Customer {
         this.customerID = 0;
         this.name = "Unknown";
         this.address = "N/A";
-        this.yardType = "N/A";
+        this.yardType = yardType.GRASS;
         this.width = 0.0;
         this.length = 0.0;
         this.totalCost = 0.0;
     }
     
-    public Customer(int customerID, String name, String address, String yardType, double width,
+    public Customer(int customerID, String name, String address, YardType yardType, double width,
                     double length, double totalCost) {
         
         setCustomerID(customerID);
@@ -78,11 +79,11 @@ public class Customer {
             this.address = "N/A";
     }
 
-    public String getYardType() {
+    public YardType getYardType() {
         return yardType;
     }
 
-    public void setYardType(String yardType) {
+    public void setYardType(YardType yardType) {
         this.yardType = yardType;
     }
 
@@ -128,7 +129,7 @@ public class Customer {
         
         String output = name + "\n";
         output += address + "\n";
-        output += "Type: " + yardType + "\n";
+        output += "Type: " + yardType.name().toLowerCase() + "\n";
         output += "Width: " + width + "\n";
         output += "Length: " + length + "\n";
         output += "Total Cost: " + fmt.format(totalCost) + "\n";

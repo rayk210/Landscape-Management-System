@@ -7,6 +7,7 @@ package service;
 import dao.CustomerDB;
 import java.util.ArrayList;
 import model.Customer;
+import enums.YardType;
 
 /**
  *
@@ -14,7 +15,7 @@ import model.Customer;
  */
 public class CustomerService {
     
-    // attributes
+    // attributs
     private final CustomerDB customerDB;
     
     // constructor
@@ -22,7 +23,7 @@ public class CustomerService {
         customerDB = new CustomerDB();
     }
     
-    // customer service methods
+    // methods for customer service
     public void addCustomer(Customer customer) {
         customerDB.add(customer);
     }
@@ -31,24 +32,19 @@ public class CustomerService {
         return customerDB.getList();
     }
     
+    public ArrayList<Customer> searchCustomerByNameOrAddress(String search) {
+        return customerDB.searchCustomer(search);
+    }
+    
+    public void editCustomer(Customer customer) {
+        customerDB.updateCustomer(customer);
+    }
+    
     public void deleteCustomer(int id) {
         customerDB.delete(id);
     }
     
-    public double calculateTotalCost(String yardType, double width, double length) {
-        
-        double area = width * length;
-        
-        switch (yardType.toLowerCase()) {
-            
-            case "grass":
-                return area * 5.0;
-                
-            case "gravel":
-                return area * 2.0;
-                
-            default:
-                return 0.0;
-        }
+    public double calculateTotalCost(YardType yardType, double width, double length) {
+        return width * length * yardType.getCostPerSqFt();
     }
 }

@@ -2,8 +2,8 @@ package view;
 
  
 import util.DataIO;
-import dao.CustomerDB;
 import model.Customer;
+import enums.YardType;
 import service.CustomerService;
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,8 +29,6 @@ public class LandscapeGUI extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(LandscapeGUI.class.getName());
 
     // class-level variables
-    private final double GRASS_PER_SQFT = 5.0;
-    private final double GRAVEL_PER_SQFT = 2.0;
     DefaultListModel<Customer> customerList;
     DefaultTableModel customerTableModel;
     private CustomerService service;
@@ -100,12 +98,15 @@ public class LandscapeGUI extends javax.swing.JFrame {
         scrCustomerList = new javax.swing.JScrollPane();
         lstCustomers = new javax.swing.JList<>();
         btnLoadList = new javax.swing.JButton();
+        btnEdit = new javax.swing.JButton();
         pnlCustomerTable = new javax.swing.JPanel();
         lblCustomerTableTitle = new javax.swing.JLabel();
         lblCustomerTable = new javax.swing.JLabel();
         scrCustomerTable = new javax.swing.JScrollPane();
         tblCustomerTable = new javax.swing.JTable();
         btnSaveToCSV = new javax.swing.JButton();
+        txtSearch = new javax.swing.JTextField();
+        btnSearch = new javax.swing.JButton();
         mnbMainMenu = new javax.swing.JMenuBar();
         mnuFile = new javax.swing.JMenu();
         itemExit = new javax.swing.JMenuItem();
@@ -375,34 +376,40 @@ public class LandscapeGUI extends javax.swing.JFrame {
         btnLoadList.setText("Load List");
         btnLoadList.addActionListener(this::btnLoadListActionPerformed);
 
+        btnEdit.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        btnEdit.setText("Edit");
+        btnEdit.addActionListener(this::btnEditActionPerformed);
+
         javax.swing.GroupLayout pnlCustomerListLayout = new javax.swing.GroupLayout(pnlCustomerList);
         pnlCustomerList.setLayout(pnlCustomerListLayout);
         pnlCustomerListLayout.setHorizontalGroup(
             pnlCustomerListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCustomerListLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(lblCustomerListTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 521, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(188, 188, 188))
             .addGroup(pnlCustomerListLayout.createSequentialGroup()
                 .addGap(123, 123, 123)
                 .addGroup(pnlCustomerListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlCustomerListLayout.createSequentialGroup()
-                        .addComponent(scrCustomerList, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(68, 68, 68)
-                        .addComponent(scrCustomerDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 309, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(132, Short.MAX_VALUE))
                     .addGroup(pnlCustomerListLayout.createSequentialGroup()
                         .addGap(58, 58, 58)
                         .addComponent(lblCustomerList)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(lblCustomerDetails)
-                        .addGap(208, 208, 208))))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCustomerListLayout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(lblCustomerListTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 521, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(188, 188, 188))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCustomerListLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnLoadList, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(156, 156, 156)
-                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(191, 191, 191))
+                        .addGap(208, 208, 208))
+                    .addGroup(pnlCustomerListLayout.createSequentialGroup()
+                        .addGroup(pnlCustomerListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(pnlCustomerListLayout.createSequentialGroup()
+                                .addComponent(btnLoadList, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(35, 35, 35)
+                                .addComponent(btnEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(30, 30, 30)
+                                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(pnlCustomerListLayout.createSequentialGroup()
+                                .addComponent(scrCustomerList, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(68, 68, 68)
+                                .addComponent(scrCustomerDetails, javax.swing.GroupLayout.PREFERRED_SIZE, 309, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap(132, Short.MAX_VALUE))))
         );
         pnlCustomerListLayout.setVerticalGroup(
             pnlCustomerListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -420,7 +427,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(pnlCustomerListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnLoadList, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnLoadList, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(50, 50, 50))
         );
 
@@ -439,25 +447,33 @@ public class LandscapeGUI extends javax.swing.JFrame {
         btnSaveToCSV.setText("Save to CSV");
         btnSaveToCSV.addActionListener(this::btnSaveToCSVActionPerformed);
 
+        txtSearch.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+
+        btnSearch.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btnSearch.setText("Search");
+        btnSearch.addActionListener(this::btnSearchActionPerformed);
+
         javax.swing.GroupLayout pnlCustomerTableLayout = new javax.swing.GroupLayout(pnlCustomerTable);
         pnlCustomerTable.setLayout(pnlCustomerTableLayout);
         pnlCustomerTableLayout.setHorizontalGroup(
             pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlCustomerTableLayout.createSequentialGroup()
-                .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pnlCustomerTableLayout.createSequentialGroup()
-                        .addGap(202, 202, 202)
-                        .addComponent(lblCustomerTableTitle))
-                    .addGroup(pnlCustomerTableLayout.createSequentialGroup()
-                        .addGap(372, 372, 372)
-                        .addComponent(lblCustomerTable)))
+                .addGap(202, 202, 202)
+                .addComponent(lblCustomerTableTitle)
                 .addContainerGap(226, Short.MAX_VALUE))
             .addGroup(pnlCustomerTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(scrCustomerTable, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(pnlCustomerTableLayout.createSequentialGroup()
-                        .addComponent(btnSaveToCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnSaveToCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(pnlCustomerTableLayout.createSequentialGroup()
+                                .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(btnSearch))
+                                .addGap(208, 208, 208)
+                                .addComponent(lblCustomerTable)))
                         .addGap(0, 0, Short.MAX_VALUE))))
         );
         pnlCustomerTableLayout.setVerticalGroup(
@@ -465,13 +481,20 @@ public class LandscapeGUI extends javax.swing.JFrame {
             .addGroup(pnlCustomerTableLayout.createSequentialGroup()
                 .addGap(23, 23, 23)
                 .addComponent(lblCustomerTableTitle)
+                .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlCustomerTableLayout.createSequentialGroup()
+                        .addGap(58, 58, 58)
+                        .addComponent(lblCustomerTable))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCustomerTableLayout.createSequentialGroup()
+                        .addGap(32, 32, 32)
+                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnSearch)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblCustomerTable)
-                .addGap(18, 18, 18)
-                .addComponent(scrCustomerTable, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(scrCustomerTable, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnSaveToCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addContainerGap(31, Short.MAX_VALUE))
         );
 
         tabMain.addTab("Customer Table", pnlCustomerTable);
@@ -633,25 +656,25 @@ public class LandscapeGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_lstCustomersValueChanged
 
     private void btnSaveToCSVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveToCSVActionPerformed
-        // get filename from user
-        String filename = JOptionPane.showInputDialog(this, "Enter filename");
+        // get filename from customer
+        String fileName = JOptionPane.showInputDialog(this, "Enter filename");
         
-        // create DataIO object and pass in filename
-        DataIO data = new DataIO(filename);
+        // create DataIO object
+        DataIO data = new DataIO();
         
-        // instantiate an array list to hold table model contents
+        // create array list to hold customers from table model
         ArrayList<Customer> custList = new ArrayList<>();
         
-        // get model table from JTable
+        // get table model
         customerTableModel = (DefaultTableModel) tblCustomerTable.getModel();
         
         for (int i = 0; i < customerTableModel.getRowCount(); i++) {
             
-            // extract values into variables
+            // extract data from table model
             int id = (Integer) customerTableModel.getValueAt(i, 0);
             String name = (String) customerTableModel.getValueAt(i, 1);
             String address = (String) customerTableModel.getValueAt(i, 2);
-            String yardType = (String) customerTableModel.getValueAt(i, 3);
+            YardType yardType = (YardType) customerTableModel.getValueAt(i, 3);
             double width = (Double) customerTableModel.getValueAt(i, 4);
             double length = (Double) customerTableModel.getValueAt(i, 5);
             double totalCost = (Double) customerTableModel.getValueAt(i, 6);
@@ -659,13 +682,70 @@ public class LandscapeGUI extends javax.swing.JFrame {
             // add fields to array list
             custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
         }
-        // pass the populated arraylist into the 'add' method to be saved
-       boolean savedData = data.add(custList);
-       
-       if (savedData == true) {
-           JOptionPane.showMessageDialog(this, "Data successfully saved!");
-       }
+        // pass customer list into save method from DataIO object
+        boolean dataSaved = data.add(custList);
+        
+        if (dataSaved == true) {
+            JOptionPane.showMessageDialog(this, "File successfully saved!");
+        }
     }//GEN-LAST:event_btnSaveToCSVActionPerformed
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        
+        // validate for empty text field
+        if (txtSearch.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Cannot be blank!");
+            txtSearch.setText("");
+            txtSearch.requestFocus();
+            return;
+        }
+        
+        // extract text from search text box
+        String search = txtSearch.getText();
+
+        // create array list to hold query results
+        ArrayList<Customer> custList = new ArrayList<>();
+        
+        // search for customer by name or address and save results into array list
+        custList = service.searchCustomerByNameOrAddress(search);
+        
+        // if results are empty, display message
+        if (custList.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No customers were found", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        // create columns for customer table model
+        String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
+        
+        // set columns on table model
+        customerTableModel = new DefaultTableModel(columns, 0);
+        
+        // iterate through array list
+        for (Customer cust : custList) {
+            
+            // create rows for each customer
+            Object[] rows = {
+                cust.getCustomerID(),
+                cust.getName(),
+                cust.getAddress(),
+                cust.getYardType(),
+                cust.getWidth(),
+                cust.getLength(),
+                cust.getTotalCost()
+            };
+            // set rows on table model
+            customerTableModel.addRow(rows);
+        }
+        // set table model on JTable to make it visible
+        tblCustomerTable.setModel(customerTableModel);
+        
+        // clear text field for next search
+        txtSearch.setText("");
+    }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
+        JOptionPane.showMessageDialog(this, "Method not yet implemented"); 
+    }//GEN-LAST:event_btnEditActionPerformed
 
     /**
      * @param args the command line arguments
@@ -696,10 +776,12 @@ public class LandscapeGUI extends javax.swing.JFrame {
     private javax.swing.ButtonGroup bgYardType;
     private javax.swing.JButton btnCalculate;
     private javax.swing.JButton btnDelete;
+    private javax.swing.JButton btnEdit;
     private javax.swing.JButton btnLoadList;
     private javax.swing.JButton btnNext;
     private javax.swing.JButton btnReset;
     private javax.swing.JButton btnSaveToCSV;
+    private javax.swing.JButton btnSearch;
     private javax.swing.JButton btnSubmit;
     private javax.swing.JMenuItem itemExit;
     private javax.swing.JMenuItem itemReset;
@@ -743,6 +825,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
     private javax.swing.JTextField txtAddress;
     private javax.swing.JTextField txtLength;
     private javax.swing.JTextField txtName;
+    private javax.swing.JTextField txtSearch;
     private javax.swing.JTextField txtWidth;
     // End of variables declaration//GEN-END:variables
 
@@ -867,18 +950,18 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // extract data from text fields
         String name = txtName.getText();
         String address = txtAddress.getText();
-        String yardType = "";
+        YardType yardType = null;
         double width = Double.parseDouble(txtWidth.getText());
         double length = Double.parseDouble(txtLength.getText());
         double totalCost = 0.0;
         
         
         if (rdoGrass.isSelected()) {
-            yardType = "grass";
+            yardType = YardType.GRASS;
             totalCost = service.calculateTotalCost(yardType, width, length);
         }
         else if (rdoGravel.isSelected()) {
-            yardType = "gravel";
+            yardType = YardType.GRAVEL;
             totalCost = service.calculateTotalCost(yardType, width, length);
         }
         else {
@@ -932,7 +1015,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         
         // displaying customer list on JTable
         // create columns for table model
-        String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Height", "Total Cost"};
+        String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
         
         // set columns on table model
         customerTableModel = new DefaultTableModel(columns, 0);

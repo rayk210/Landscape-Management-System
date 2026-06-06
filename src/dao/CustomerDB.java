@@ -9,6 +9,7 @@ import model.Customer;
 import java.sql.*;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
+import enums.YardType;
 /**
  *
  * @author rayk2
@@ -38,7 +39,7 @@ public class CustomerDB {
             // set values for statement
             pStmt.setString(1, cust.getName());
             pStmt.setString(2, cust.getAddress());
-            pStmt.setString(3, cust.getYardType());
+            pStmt.setString(3, cust.getYardType().toString());
             pStmt.setDouble(4, cust.getWidth());
             pStmt.setDouble(5, cust.getLength());
             pStmt.setDouble(6, cust.getTotalCost());
@@ -82,7 +83,7 @@ public class CustomerDB {
                 int customerID = rs.getInt("customerID");
                 String name = rs.getString("name");
                 String address = rs.getString("address");
-                String yardType = rs.getString("yardType");
+                YardType yardType = YardType.fromString(rs.getString("yardType"));
                 double width = rs.getDouble("width");
                 double length = rs.getDouble("length");
                 double totalCost = rs.getDouble("totalCost");
@@ -96,6 +97,92 @@ public class CustomerDB {
         catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        return custList;
+    }
+    
+    // update customer fields
+    public void updateCustomer(Customer customer) {
+        
+        try {
+            // establish connection
+            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+            
+            // create sql query
+            String sqlQuery = "UPDATE customers SET name = ?, address = ?, yardType = ?, width = ?, length = ?, totalCost = ? WHERE customerID = ?";
+            
+            // create prepared statement
+            PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
+            
+            // set values for statement
+            pStmt.setString(1, customer.getName());
+            pStmt.setString(2, customer.getAddress());
+            pStmt.setString(3, customer.getYardType().name());
+            pStmt.setDouble(4, customer.getWidth());
+            pStmt.setDouble(5, customer.getLength());
+            pStmt.setDouble(6, customer.getTotalCost());
+            pStmt.setInt(7, customer.getCustomerID());
+            
+            // execute statement
+            int rowsAffected = pStmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Update Successful!");
+            }
+            
+            // close connection
+            conn.close();
+        }
+        catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // get customer based on name or address
+    public ArrayList<Customer> searchCustomer(String search) {
+        // create arraylist to hold search results
+        ArrayList<Customer> custList = new ArrayList<>();
+        
+        try {
+            // establish connection
+            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+            
+            // create sql statement
+            String sqlQuery = "SELECT * FROM customers WHERE name LIKE ? OR address LIKE ?";
+            
+            // create prepared statemnt
+            PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
+            
+            // wildcard string format for searches
+            String wildCard = "%" + search + "%";
+            
+            // set values for prepared statement
+            pStmt.setString(1, wildCard);
+            pStmt.setString(2, wildCard);
+            
+            // execute statement
+            ResultSet rs = pStmt.executeQuery();
+            
+            // process the results of query
+            while (rs.next()) {
+                
+                int id = rs.getInt("customerID");
+                String name = rs.getString("name");
+                String address = rs.getString("address");
+                YardType yardType = YardType.fromString(rs.getString("yardType"));
+                double width = rs.getDouble("width");
+                double length = rs.getDouble("length");
+                double totalCost = rs.getDouble("totalCost");
+                
+                // fill array list with results
+                custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
+            }
+            // close connection
+            conn.close();
+        }
+        catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Could not connect to database!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        // return customer list
         return custList;
     }
     
