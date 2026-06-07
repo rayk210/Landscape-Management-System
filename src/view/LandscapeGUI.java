@@ -4,12 +4,21 @@ package view;
 import util.DataIO;
 import model.Customer;
 import enums.YardType;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import service.CustomerService;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
@@ -33,6 +42,9 @@ public class LandscapeGUI extends javax.swing.JFrame {
     DefaultTableModel customerTableModel;
     private CustomerService service;
     
+    private JTextField txtCustName, txtCustAddress, txtCustYardType, txtYardWidth, txtYardLength, txtCustTotalCost;
+    private JComboBox<YardType> cboYardType;
+    
     /**
      * Creates new form LandscapeGUI
      */
@@ -41,6 +53,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // instantiate variables
         customerList = new DefaultListModel<>();
         customerTableModel = new DefaultTableModel();
+        cboYardType = new JComboBox<>(YardType.values());
         service = new CustomerService();
         
         initComponents();
@@ -620,13 +633,15 @@ public class LandscapeGUI extends javax.swing.JFrame {
             return;
         }
         
-        // get customers name
+        // get customers id
         int customerID = cust.getCustomerID();
         
-        JOptionPane.showMessageDialog(this, "Customer: " + cust + " has been deleted with ID: " + customerID);
+        // delete customer by id
+        boolean deletedCust = service.deleteCustomer(customerID);
         
-        // delete customer by name
-        service.deleteCustomer(customerID);
+        if (deletedCust) {
+            JOptionPane.showMessageDialog(this, "Customer successfully deleted!");
+        }
         
         // clear customer details text area
         txaCustomerDetails.setText("");
@@ -711,7 +726,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         
         // if results are empty, display message
         if (custList.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No customers were found", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No customers were found");
         }
         
         // create columns for customer table model
@@ -744,7 +759,137 @@ public class LandscapeGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
-        JOptionPane.showMessageDialog(this, "Method not yet implemented"); 
+        // get selected customer
+        Customer selectedCustomer = lstCustomers.getSelectedValue();
+        
+        // condition to check whether customer was selected
+        if (selectedCustomer == null) {
+            JOptionPane.showMessageDialog(this, "Customer must be selected", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // create JDialog to edit customer selection and set properties
+        JDialog dialog = new JDialog(this, "Edit customer information for " + selectedCustomer.getName());
+        dialog.setSize(400, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        
+        // create JPanel as a container to hold fields
+        JPanel pnl = new JPanel(new GridLayout(7, 2));
+        
+        // create name label and add component to panel
+        JLabel lblCustName = new JLabel("Name:");
+        lblCustName.setHorizontalAlignment(JLabel.CENTER);
+        pnl.add(lblCustName);
+        
+        // create text field for name and get attribute for selected customer
+        txtCustName = new JTextField();
+        txtCustName.setText(selectedCustomer.getName());
+        
+        // add text field to panel
+        pnl.add(txtCustName);
+        
+        // create address label and add component to panel
+        JLabel lblCustAddress = new JLabel("Address:");
+        lblCustAddress.setHorizontalAlignment(JLabel.CENTER);
+        pnl.add(lblCustAddress);
+        
+        // create text field for address and get attribute for selected customer
+        txtCustAddress = new JTextField();
+        txtCustAddress.setText(selectedCustomer.getAddress());
+        
+        // add text field to panel
+        pnl.add(txtCustAddress);
+        
+        // create yard type label and add component to panel
+        JLabel lblCustYardType = new JLabel("Yard Type:");
+        lblCustYardType.setHorizontalAlignment(JLabel.CENTER);
+        pnl.add(lblCustYardType);
+        
+        // get yard type attribute for selected customer from combobox
+        cboYardType.setSelectedItem(selectedCustomer.getYardType());
+        pnl.add(cboYardType);
+        
+        // create width label and add component to panel
+        JLabel lblYardWidth = new JLabel("Width:");
+        lblYardWidth.setHorizontalAlignment(JLabel.CENTER);
+        pnl.add(lblYardWidth);
+        
+        // create text field for width and get attribute for selected customer
+        txtYardWidth = new JTextField();
+        txtYardWidth.setText(String.valueOf(selectedCustomer.getWidth()));
+        
+        // add text field to panel
+        pnl.add(txtYardWidth);
+        
+        // create length label and add component to panel
+        JLabel lblYardLength = new JLabel("Length:");
+        lblYardLength.setHorizontalAlignment(JLabel.CENTER);
+        pnl.add(lblYardLength);
+        
+        // create text field for length and get attribute for selected customer
+        txtYardLength = new JTextField();
+        txtYardLength.setText(String.valueOf(selectedCustomer.getLength()));
+        
+        // add text field to panel
+        pnl.add(txtYardLength);
+        
+        // create total cost label and add component to panel
+        JLabel lblCustTotalCost = new JLabel("Total Cost:");
+        lblCustTotalCost.setHorizontalAlignment(JLabel.CENTER);
+        pnl.add(lblCustTotalCost);
+        
+        // create text field for totalCost and get attribute for selected customer
+        txtCustTotalCost = new JTextField();
+        
+        // set editable to false
+        txtCustTotalCost.setEditable(false);
+        
+        // add text field to panel
+        pnl.add(txtCustTotalCost);
+        
+        // create save button for customer
+        JButton btnSaveCust = new JButton("Save");
+        
+        // create event handler for save button
+        btnSaveCust.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // get selected customer id
+                int customerID = selectedCustomer.getCustomerID();
+                
+                // pass in customerID to updateCust
+                Customer updatedCustomer = updateCust(customerID);
+                
+                // update total cost
+                double totalCost = updatedCustomer.getTotalCost();
+                
+                txtCustTotalCost.setText(String.valueOf(totalCost));
+                
+                // call service to update selected customer
+                boolean updatedCust = service.editCustomer(updatedCustomer);
+                
+                if (updatedCust) {
+                    JOptionPane.showMessageDialog(null, "Customer successfully updated!");
+                }
+                
+                // re-load customer list and JTable
+                loadList();
+                
+                // close dialog
+                dialog.dispose();
+            }
+        });
+        
+        // add button to panel
+        pnl.add(btnSaveCust);
+        
+        // add JPanel to dialog
+        dialog.add(pnl);
+        
+        // set visibility on dialog to true
+        dialog.setVisible(true);
     }//GEN-LAST:event_btnEditActionPerformed
 
     /**
@@ -846,7 +991,6 @@ public class LandscapeGUI extends javax.swing.JFrame {
         txtWidth.setText("");
         txtLength.setText("");
         txaOrder.setText("");
-        
     }
 
     private boolean validateFields() {
@@ -946,6 +1090,29 @@ public class LandscapeGUI extends javax.swing.JFrame {
         field.requestFocusInWindow();
     }
 
+    // update customer method
+    private Customer updateCust(int customerID) {
+        
+        // get id of selected customer
+        int id = customerID;
+        
+        // extract text from fields on JDialog
+        String name = txtCustName.getText();
+        String address = txtCustAddress.getText();
+        YardType yardType = (YardType) cboYardType.getSelectedItem();
+        double width = Double.parseDouble(txtYardWidth.getText());
+        double length = Double.parseDouble(txtYardLength.getText());
+        
+        // calculate total price based on width, length, and yard type selected
+        double totalCost = service.calculateTotalCost(yardType, width, length);
+        
+        // create customer object
+        Customer cust = new Customer(id, name, address, yardType, width, length, totalCost);
+        
+        // return customer object
+        return cust;
+    }
+    
     private Customer createCustomer() {
         // extract data from text fields
         String name = txtName.getText();
@@ -975,7 +1142,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // return customer
         return cust;
     }
-
+    
     private void submitOrder() {
         // validate text fields
         if (!validateFields()) {
@@ -986,7 +1153,11 @@ public class LandscapeGUI extends javax.swing.JFrame {
         Customer cust = createCustomer();
         
         // add customer
-        service.addCustomer(cust);
+        boolean custSubmitted = service.addCustomer(cust);
+        
+        if (custSubmitted) {
+            JOptionPane.showMessageDialog(this, "Customer successfully submitted!");
+        }
         
         // load latest customer list
         loadList();

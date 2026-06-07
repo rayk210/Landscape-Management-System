@@ -24,8 +24,8 @@ public class CustomerService {
     }
     
     // methods for customer service
-    public void addCustomer(Customer customer) {
-        customerDB.add(customer);
+    public boolean addCustomer(Customer customer) {
+        return customerDB.add(customer);
     }
     
     public ArrayList<Customer> getAllCustomers() {
@@ -36,12 +36,12 @@ public class CustomerService {
         return customerDB.searchCustomer(search);
     }
     
-    public void editCustomer(Customer customer) {
-        customerDB.updateCustomer(customer);
+    public boolean editCustomer(Customer customer) {
+        return customerDB.updateCustomer(customer);
     }
     
-    public void deleteCustomer(int id) {
-        customerDB.delete(id);
+    public boolean deleteCustomer(int id) {
+        return customerDB.delete(id);
     }
     
     public double calculateTotalCost(YardType yardType, double width, double length) {

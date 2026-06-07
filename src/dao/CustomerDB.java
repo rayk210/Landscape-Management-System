@@ -24,7 +24,7 @@ public class CustomerDB {
     Connection conn;
     
     // insert customer into Database
-    public void add(Customer cust) {
+    public boolean add(Customer cust) {
         
         try {
             // establish connection
@@ -45,11 +45,7 @@ public class CustomerDB {
             pStmt.setDouble(6, cust.getTotalCost());
             
             // execute statement
-            int rowsAffected = pStmt.executeUpdate();
-            
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Insert Successful!");
-            }
+            pStmt.executeUpdate();
             
             // close connection
             conn.close();
@@ -57,6 +53,7 @@ public class CustomerDB {
         catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        return true;
     }
     
     // retrieve a list of customers from Database
@@ -101,7 +98,7 @@ public class CustomerDB {
     }
     
     // update customer fields
-    public void updateCustomer(Customer customer) {
+    public boolean updateCustomer(Customer customer) {
         
         try {
             // establish connection
@@ -123,11 +120,7 @@ public class CustomerDB {
             pStmt.setInt(7, customer.getCustomerID());
             
             // execute statement
-            int rowsAffected = pStmt.executeUpdate();
-            
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Update Successful!");
-            }
+            pStmt.executeUpdate();
             
             // close connection
             conn.close();
@@ -135,6 +128,7 @@ public class CustomerDB {
         catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        return true;
     }
     
     // get customer based on name or address
@@ -187,7 +181,7 @@ public class CustomerDB {
     }
     
     // delete a customer from the database
-    public void delete(int customerID) {
+    public boolean delete(int customerID) {
         
         try {
             // establish connection
@@ -203,16 +197,14 @@ public class CustomerDB {
             pStmt.setInt(1, customerID);
             
             // execute statement
-            int rowsAffected = pStmt.executeUpdate();
+            pStmt.executeUpdate();
             
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Customer Deleted!");
-            }
             // close connection
             conn.close();
         }
         catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        return true;
     }
 }
