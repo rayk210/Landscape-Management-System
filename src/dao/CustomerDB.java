@@ -6,6 +6,7 @@ package dao;
  */
 
 import model.Customer;
+import enums.SortOption;
 import java.sql.*;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
@@ -51,7 +52,8 @@ public class CustomerDB {
             conn.close();
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Failed to connect to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         return true;
     }
@@ -97,7 +99,50 @@ public class CustomerDB {
         return custList;
     }
     
-    // update customer fields
+    // sort customer based on name, yard type, or total cost
+    public ArrayList<Customer> sortCustomers(SortOption option) {
+        // create array list to hold results
+        ArrayList<Customer> custList = new ArrayList<>();
+        
+        try {
+            // establish connection
+            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+            
+            // create sql query based on chosen option of sorting
+            String sqlQuery = "SELECT * FROM customers ORDER BY " + option.getColumn();
+            
+            // create statement
+            Statement stmt = conn.createStatement();
+            
+            // execute statement
+            ResultSet rs = stmt.executeQuery(sqlQuery);
+            
+            // process results of the query
+            while (rs.next()) {
+                
+                // extract data from result set
+                int id = rs.getInt("customerID");
+                String name = rs.getString("name");
+                String address = rs.getString("address");
+                YardType yardType = YardType.fromString(rs.getString("yardType"));
+                double width = rs.getDouble("width");
+                double length = rs.getDouble("length");
+                double totalCost = rs.getDouble("totalCost");
+                
+                // add data to array list and build customers
+                custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
+            }
+            // close connection
+            conn.close();
+        }
+        catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Failed to connect to database " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        // return customer array list
+        return custList;
+    }
+    
+    // update customer based on customer ID
     public boolean updateCustomer(Customer customer) {
         
         try {
@@ -107,10 +152,10 @@ public class CustomerDB {
             // create sql query
             String sqlQuery = "UPDATE customers SET name = ?, address = ?, yardType = ?, width = ?, length = ?, totalCost = ? WHERE customerID = ?";
             
-            // create prepared statement
+            // make prepared statement
             PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
             
-            // set values for statement
+            // set value for prepared statment
             pStmt.setString(1, customer.getName());
             pStmt.setString(2, customer.getAddress());
             pStmt.setString(3, customer.getYardType().name());
@@ -120,13 +165,14 @@ public class CustomerDB {
             pStmt.setInt(7, customer.getCustomerID());
             
             // execute statement
-            pStmt.executeUpdate();
+            pStmt.execute();
             
             // close connection
             conn.close();
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Failed to connect to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         return true;
     }
@@ -203,7 +249,8 @@ public class CustomerDB {
             conn.close();
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Failed to connect to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         return true;
     }

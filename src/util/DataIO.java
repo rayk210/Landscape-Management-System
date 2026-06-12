@@ -78,52 +78,52 @@ public class DataIO {
         return true;
     }
     
-    // read data from a file to an arraylist
+    // read data from a file to an array list
     public ArrayList<Customer> getList() {
-        // create array list to hold data from file
+        
+        // create array list to hold customers from file
         ArrayList<Customer> custList = new ArrayList<>();
         
         try {
             // create file object and open file for reading
             BufferedReader inBuffer = new BufferedReader(new FileReader(fileName));
             
-            // create line reader
-            String inLine = ""; 
-            inLine = inBuffer.readLine();
+            // create read line object
+            String inLine = "";
             
-            // declare StringTokenizer
+            // create StringTokenizer
             StringTokenizer tokens;
+            
+            inLine = inBuffer.readLine();
             
             // read file until EOF
             while(inLine != null) {
                 
-                // break lines into fields based on delimiter
+                // break lines down into fields based on delimiter
                 tokens = new StringTokenizer(inLine, "#");
                 
-                // extract data from file
+                // extract customer fields from file
                 int id = Integer.parseInt(tokens.nextToken());
                 String name = tokens.nextToken();
                 String address = tokens.nextToken();
-                String yardType = tokens.nextToken();
-                YardType type = YardType.valueOf(yardType);
+                YardType yardType = YardType.fromString(tokens.nextToken());
                 double width = Double.parseDouble(tokens.nextToken());
                 double length = Double.parseDouble(tokens.nextToken());
                 double totalCost = Double.parseDouble(tokens.nextToken());
                 
-                // add fields to array list
-                custList.add(new Customer(id, name, address, type, width, length, totalCost));
+                // add customer fields to array list
+                custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
                 
-                // if inLine is null, stop reading
+                // if there are no more lines, return false to end iteration
                 inLine = inBuffer.readLine();
             }
             // close pipe
             inBuffer.close();
-            
         }
-        catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Cannot read from file!", "Error", JOptionPane.ERROR_MESSAGE);
+        catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Cannot read file!", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        // return customer list
+        // return customer array list
         return custList;
     }
    

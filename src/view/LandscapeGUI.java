@@ -4,12 +4,12 @@ package view;
 import util.DataIO;
 import model.Customer;
 import enums.YardType;
+import enums.SortOption;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import service.CustomerService;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -42,7 +42,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
     DefaultTableModel customerTableModel;
     private CustomerService service;
     
-    private JTextField txtCustName, txtCustAddress, txtCustYardType, txtYardWidth, txtYardLength, txtCustTotalCost;
+    private JTextField txtCustName, txtCustAddress, txtYardWidth, txtYardLength, txtCustTotalCost;
     private JComboBox<YardType> cboYardType;
     
     /**
@@ -55,6 +55,12 @@ public class LandscapeGUI extends javax.swing.JFrame {
         customerTableModel = new DefaultTableModel();
         cboYardType = new JComboBox<>(YardType.values());
         service = new CustomerService();
+        
+        txtCustName = new JTextField();
+        txtCustAddress = new JTextField();
+        txtYardWidth = new JTextField();
+        txtYardLength = new JTextField();
+        txtCustTotalCost = new JTextField();
         
         initComponents();
         
@@ -120,6 +126,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         btnSaveToCSV = new javax.swing.JButton();
         txtSearch = new javax.swing.JTextField();
         btnSearch = new javax.swing.JButton();
+        cboSortOption = new javax.swing.JComboBox<>();
         mnbMainMenu = new javax.swing.JMenuBar();
         mnuFile = new javax.swing.JMenu();
         itemExit = new javax.swing.JMenuItem();
@@ -466,6 +473,10 @@ public class LandscapeGUI extends javax.swing.JFrame {
         btnSearch.setText("Search");
         btnSearch.addActionListener(this::btnSearchActionPerformed);
 
+        cboSortOption.setModel(new javax.swing.DefaultComboBoxModel<>(SortOption.values())
+        );
+        cboSortOption.addActionListener(this::cboSortOptionActionPerformed);
+
         javax.swing.GroupLayout pnlCustomerTableLayout = new javax.swing.GroupLayout(pnlCustomerTable);
         pnlCustomerTable.setLayout(pnlCustomerTableLayout);
         pnlCustomerTableLayout.setHorizontalGroup(
@@ -480,29 +491,37 @@ public class LandscapeGUI extends javax.swing.JFrame {
                     .addComponent(scrCustomerTable, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(pnlCustomerTableLayout.createSequentialGroup()
                         .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnSaveToCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(pnlCustomerTableLayout.createSequentialGroup()
+                                .addComponent(btnSaveToCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
                             .addGroup(pnlCustomerTableLayout.createSequentialGroup()
                                 .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(btnSearch))
                                 .addGap(208, 208, 208)
-                                .addComponent(lblCustomerTable)))
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                                .addComponent(lblCustomerTable)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cboSortOption, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap())))
         );
         pnlCustomerTableLayout.setVerticalGroup(
             pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlCustomerTableLayout.createSequentialGroup()
                 .addGap(23, 23, 23)
                 .addComponent(lblCustomerTableTitle)
-                .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(pnlCustomerTableLayout.createSequentialGroup()
-                        .addGap(58, 58, 58)
-                        .addComponent(lblCustomerTable))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCustomerTableLayout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnSearch)))
+                        .addComponent(cboSortOption, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(pnlCustomerTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(pnlCustomerTableLayout.createSequentialGroup()
+                            .addGap(58, 58, 58)
+                            .addComponent(lblCustomerTable))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlCustomerTableLayout.createSequentialGroup()
+                            .addGap(32, 32, 32)
+                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(btnSearch))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(scrCustomerTable, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
@@ -674,18 +693,17 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // get filename from customer
         String fileName = JOptionPane.showInputDialog(this, "Enter filename");
         
-        // create DataIO object
-        DataIO data = new DataIO();
+        // create DataIO object and pass in filename
+        DataIO data = new DataIO(fileName);
         
-        // create array list to hold customers from table model
+        // instantiate array list to hold customers from JTabel
         ArrayList<Customer> custList = new ArrayList<>();
         
-        // get table model
+        // get table model from JTable
         customerTableModel = (DefaultTableModel) tblCustomerTable.getModel();
         
+        // iterate through table model
         for (int i = 0; i < customerTableModel.getRowCount(); i++) {
-            
-            // extract data from table model
             int id = (Integer) customerTableModel.getValueAt(i, 0);
             String name = (String) customerTableModel.getValueAt(i, 1);
             String address = (String) customerTableModel.getValueAt(i, 2);
@@ -694,14 +712,14 @@ public class LandscapeGUI extends javax.swing.JFrame {
             double length = (Double) customerTableModel.getValueAt(i, 5);
             double totalCost = (Double) customerTableModel.getValueAt(i, 6);
             
-            // add fields to array list
+            // add customers to the array list
             custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
         }
-        // pass customer list into save method from DataIO object
+        // pass customer list to saved method in DataIO
         boolean dataSaved = data.add(custList);
         
-        if (dataSaved == true) {
-            JOptionPane.showMessageDialog(this, "File successfully saved!");
+        if (dataSaved) {
+            JOptionPane.showMessageDialog(this, "Data successfully saved!");
         }
     }//GEN-LAST:event_btnSaveToCSVActionPerformed
 
@@ -729,52 +747,30 @@ public class LandscapeGUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "No customers were found");
         }
         
-        // create columns for customer table model
-        String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
-        
-        // set columns on table model
-        customerTableModel = new DefaultTableModel(columns, 0);
-        
-        // iterate through array list
-        for (Customer cust : custList) {
-            
-            // create rows for each customer
-            Object[] rows = {
-                cust.getCustomerID(),
-                cust.getName(),
-                cust.getAddress(),
-                cust.getYardType(),
-                cust.getWidth(),
-                cust.getLength(),
-                cust.getTotalCost()
-            };
-            // set rows on table model
-            customerTableModel.addRow(rows);
-        }
-        // set table model on JTable to make it visible
-        tblCustomerTable.setModel(customerTableModel);
+        // show table model containing search results
+        createCustomerTableModel(custList);
         
         // clear text field for next search
         txtSearch.setText("");
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
-        // get selected customer
+        // get selected customer from JList
         Customer selectedCustomer = lstCustomers.getSelectedValue();
         
-        // condition to check whether customer was selected
+        // prompt user to select customer if none is selected
         if (selectedCustomer == null) {
             JOptionPane.showMessageDialog(this, "Customer must be selected", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
-        // create JDialog to edit customer selection and set properties
-        JDialog dialog = new JDialog(this, "Edit customer information for " + selectedCustomer.getName());
+        // create JDialog to handle updating
+        JDialog dialog = new JDialog(this, "Edit customer information for " + selectedCustomer.getName(), true);
         dialog.setSize(400, 600);
-        dialog.setLocationRelativeTo(this);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setLocationRelativeTo(this);
         
-        // create JPanel as a container to hold fields
+        // create panel as a container to hold labels, text fields, and buttons
         JPanel pnl = new JPanel(new GridLayout(7, 2));
         
         // create name label and add component to panel
@@ -782,11 +778,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
         lblCustName.setHorizontalAlignment(JLabel.CENTER);
         pnl.add(lblCustName);
         
-        // create text field for name and get attribute for selected customer
-        txtCustName = new JTextField();
+        // extract name from selected customer and add component to panel
         txtCustName.setText(selectedCustomer.getName());
-        
-        // add text field to panel
         pnl.add(txtCustName);
         
         // create address label and add component to panel
@@ -794,19 +787,16 @@ public class LandscapeGUI extends javax.swing.JFrame {
         lblCustAddress.setHorizontalAlignment(JLabel.CENTER);
         pnl.add(lblCustAddress);
         
-        // create text field for address and get attribute for selected customer
-        txtCustAddress = new JTextField();
+        // extract address from selected customer and add component to panel
         txtCustAddress.setText(selectedCustomer.getAddress());
-        
-        // add text field to panel
         pnl.add(txtCustAddress);
         
-        // create yard type label and add component to panel
+        // create yardtype label and add to panel
         JLabel lblCustYardType = new JLabel("Yard Type:");
         lblCustYardType.setHorizontalAlignment(JLabel.CENTER);
         pnl.add(lblCustYardType);
         
-        // get yard type attribute for selected customer from combobox
+        // get yardtype selected from combobox and add compeont to panel
         cboYardType.setSelectedItem(selectedCustomer.getYardType());
         pnl.add(cboYardType);
         
@@ -815,11 +805,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
         lblYardWidth.setHorizontalAlignment(JLabel.CENTER);
         pnl.add(lblYardWidth);
         
-        // create text field for width and get attribute for selected customer
-        txtYardWidth = new JTextField();
+        // extract width from selected customer and add component to panel
         txtYardWidth.setText(String.valueOf(selectedCustomer.getWidth()));
-        
-        // add text field to panel
         pnl.add(txtYardWidth);
         
         // create length label and add component to panel
@@ -827,11 +814,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
         lblYardLength.setHorizontalAlignment(JLabel.CENTER);
         pnl.add(lblYardLength);
         
-        // create text field for length and get attribute for selected customer
-        txtYardLength = new JTextField();
+        // extract length from selected customer and add component to panel
         txtYardLength.setText(String.valueOf(selectedCustomer.getLength()));
-        
-        // add text field to panel
         pnl.add(txtYardLength);
         
         // create total cost label and add component to panel
@@ -839,58 +823,71 @@ public class LandscapeGUI extends javax.swing.JFrame {
         lblCustTotalCost.setHorizontalAlignment(JLabel.CENTER);
         pnl.add(lblCustTotalCost);
         
-        // create text field for totalCost and get attribute for selected customer
-        txtCustTotalCost = new JTextField();
-        
-        // set editable to false
+        // set text field for total cost to non-editable and add to panel
         txtCustTotalCost.setEditable(false);
-        
-        // add text field to panel
         pnl.add(txtCustTotalCost);
         
-        // create save button for customer
-        JButton btnSaveCust = new JButton("Save");
+        // create save button
+        JButton btnSave = new JButton("Save");
         
-        // create event handler for save button
-        btnSaveCust.addActionListener(new ActionListener() {
+        // make an anonomous inner class action listener for the save button
+        btnSave.addActionListener(new ActionListener() {
             
             @Override
             public void actionPerformed(ActionEvent e) {
-                // get selected customer id
-                int customerID = selectedCustomer.getCustomerID();
                 
-                // pass in customerID to updateCust
-                Customer updatedCustomer = updateCust(customerID);
+                // create customer object using selected customer
+                Customer updatedCustomer = updateCust(selectedCustomer);
                 
-                // update total cost
+                // display new total cost
                 double totalCost = updatedCustomer.getTotalCost();
-                
                 txtCustTotalCost.setText(String.valueOf(totalCost));
                 
-                // call service to update selected customer
-                boolean updatedCust = service.editCustomer(updatedCustomer);
+                int confirm = JOptionPane.showConfirmDialog(null, updatedCustomer.getDetails(), "Confirm Update", 
+                                                            JOptionPane.YES_NO_OPTION);
                 
-                if (updatedCust) {
-                    JOptionPane.showMessageDialog(null, "Customer successfully updated!");
+                if (confirm == JOptionPane.NO_OPTION) {
+                    return;
                 }
                 
-                // re-load customer list and JTable
+                // call service to update customer information
+                boolean custUpdated = service.editCustomer(updatedCustomer);
+                    
+                if (custUpdated) {
+                    JOptionPane.showMessageDialog(null, "Customer update successful!");
+                } 
+                
+                // re-load customer JList and JTable
                 loadList();
                 
-                // close dialog
+                // close JDialog
                 dialog.dispose();
             }
         });
         
-        // add button to panel
-        pnl.add(btnSaveCust);
+        // add save button to panel
+        pnl.add(btnSave);
         
-        // add JPanel to dialog
+        // add panel to dialog
         dialog.add(pnl);
         
-        // set visibility on dialog to true
+        // set visible to true
         dialog.setVisible(true);
     }//GEN-LAST:event_btnEditActionPerformed
+
+    private void cboSortOptionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboSortOptionActionPerformed
+
+        // get sorting option from user
+        SortOption option = (SortOption) cboSortOption.getSelectedItem();
+        
+        // create array list to hold customers
+        ArrayList<Customer> custList = new ArrayList<>();
+        
+        custList = service.sortCustomersBasedOnAttribute(option);
+        
+        // pass array list to create customer table model
+        createCustomerTableModel(custList);
+    }//GEN-LAST:event_cboSortOptionActionPerformed
 
     /**
      * @param args the command line arguments
@@ -928,6 +925,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
     private javax.swing.JButton btnSaveToCSV;
     private javax.swing.JButton btnSearch;
     private javax.swing.JButton btnSubmit;
+    private javax.swing.JComboBox<SortOption> cboSortOption;
     private javax.swing.JMenuItem itemExit;
     private javax.swing.JMenuItem itemReset;
     private javax.swing.JMenuItem itemSubmitOrder;
@@ -1090,26 +1088,26 @@ public class LandscapeGUI extends javax.swing.JFrame {
         field.requestFocusInWindow();
     }
 
-    // update customer method
-    private Customer updateCust(int customerID) {
+    // create update customer method to handle updates
+    private Customer updateCust(Customer original) {
         
-        // get id of selected customer
-        int id = customerID;
+        // get id of customer who will be updated
+        int id = original.getCustomerID();
         
-        // extract text from fields on JDialog
+        // extract text from fields
         String name = txtCustName.getText();
         String address = txtCustAddress.getText();
         YardType yardType = (YardType) cboYardType.getSelectedItem();
         double width = Double.parseDouble(txtYardWidth.getText());
         double length = Double.parseDouble(txtYardLength.getText());
         
-        // calculate total price based on width, length, and yard type selected
+        // calculate updated customers yard cost based on width, length, and yard type
         double totalCost = service.calculateTotalCost(yardType, width, length);
         
         // create customer object
         Customer cust = new Customer(id, name, address, yardType, width, length, totalCost);
         
-        // return customer object
+        // return customer
         return cust;
     }
     
@@ -1148,7 +1146,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         if (!validateFields()) {
             return;
         }
-        
+       
         // create customer
         Customer cust = createCustomer();
         
@@ -1183,18 +1181,23 @@ public class LandscapeGUI extends javax.swing.JFrame {
         for (Customer cust : custList) {
             customerList.addElement(cust);
         }
+        // create customer table model using array list of customers
+        createCustomerTableModel(custList);
+    }
+    
+    // create customer table models
+    public void createCustomerTableModel(ArrayList<Customer> custList) {
         
-        // displaying customer list on JTable
         // create columns for table model
         String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
         
-        // set columns on table model
+        // instantiate table model with columns
         customerTableModel = new DefaultTableModel(columns, 0);
         
-        // iterate through customer list array and create rows of table model
+        // iterate through customer array list to create rows
         for (Customer cust : custList) {
             
-            // create rows
+            // create rows for each field
             Object[] rows = new Object[] {
                 cust.getCustomerID(),
                 cust.getName(),
@@ -1207,7 +1210,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
             // add rows to table model
             customerTableModel.addRow(rows);
         }
-        // set customer table model as model on JTable
+        // set customer table model as model for JTable
         tblCustomerTable.setModel(customerTableModel);
     }
 }

@@ -5,6 +5,7 @@
 package service;
 
 import dao.CustomerDB;
+import enums.SortOption;
 import java.util.ArrayList;
 import model.Customer;
 import enums.YardType;
@@ -15,7 +16,7 @@ import enums.YardType;
  */
 public class CustomerService {
     
-    // attributs
+    // attributes
     private final CustomerDB customerDB;
     
     // constructor
@@ -30,6 +31,10 @@ public class CustomerService {
     
     public ArrayList<Customer> getAllCustomers() {
         return customerDB.getList();
+    }
+    
+    public ArrayList<Customer> sortCustomersBasedOnAttribute(SortOption option) {
+        return customerDB.sortCustomers(option);
     }
     
     public ArrayList<Customer> searchCustomerByNameOrAddress(String search) {
