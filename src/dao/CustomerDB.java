@@ -5,11 +5,12 @@ package dao;
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 
+import dao.mapper.CustomerRowMapper;
+import dao.mapper.RowMapper;
 import model.Customer;
 import enums.SortOption;
 import java.sql.*;
 import java.util.ArrayList;
-import enums.YardType;
 /**
  *
  * @author rayk2
@@ -28,6 +29,8 @@ public class CustomerDB implements CustomerRepository {
     private static final String SORT_CUSTOMERS = "SELECT * FROM customers ORDER BY ";
     private static final String UPDATE_CUSTOMER = "UPDATE customers SET name = ?, address = ?, yardType = ?, width = ?, length = ?, totalCost = ? WHERE customerID = ?";
     private static final String DELETE_CUSTOMER = "DELETE FROM customers WHERE customerID = ?";
+    
+    private static final RowMapper<Customer> CustomerMapper = new CustomerRowMapper();
     
     // insert customer into Database
     @Override
@@ -59,9 +62,6 @@ public class CustomerDB implements CustomerRepository {
     @Override
     public ArrayList<Customer> getAll() {
         
-        // create array list to hold query results
-        ArrayList<Customer> custList = new ArrayList<>();
-        
         // establish connection
         try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
                 
@@ -71,26 +71,18 @@ public class CustomerDB implements CustomerRepository {
             // execute statement
             ResultSet rs = stmt.executeQuery(GET_ALL_CUSTOMERS))
         {
-            
             // process the results from the query
-            while(rs.next()) {
-                custList.add(mapCustomer(rs));
-            }
+            return mapRows(rs);
         }
         catch (SQLException e) {
             e.printStackTrace();
         }
-        return custList;
+        return new ArrayList<>();
     }
     
     // sort customer based on name, yard type, or total cost
     @Override
     public ArrayList<Customer> sortCustomers(SortOption option) {
-        // create array list to hold results
-        ArrayList<Customer> custList = new ArrayList<>();
-        
-        // create sql query based on chosen option of sorting
-        //String sqlQuery = SORT_CUSTOMERS + option.getColumn();
         
         try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
             // create statement
@@ -100,15 +92,13 @@ public class CustomerDB implements CustomerRepository {
             ResultSet rs = stmt.executeQuery(SORT_CUSTOMERS + option.getColumn()))
         {
             // process results of the query
-            while (rs.next()) {
-                custList.add(mapCustomer(rs));
-            }
+            return mapRows(rs);
         }
         catch (SQLException e) {
             e.printStackTrace();
         }
         // return customer array list
-        return custList;
+        return new ArrayList<>();
     }
     
     // update customer based on customer ID
@@ -119,14 +109,7 @@ public class CustomerDB implements CustomerRepository {
             // make prepared statement
             PreparedStatement pStmt = conn.prepareStatement(UPDATE_CUSTOMER))
         {
-            // set value for prepared statment
-            pStmt.setString(1, customer.getName());
-            pStmt.setString(2, customer.getAddress());
-            pStmt.setString(3, customer.getYardType().name());
-            pStmt.setDouble(4, customer.getWidth());
-            pStmt.setDouble(5, customer.getLength());
-            pStmt.setDouble(6, customer.getTotalCost());
-            pStmt.setInt(7, customer.getCustomerID());
+            fillUpdateStatement(pStmt, customer);
             
             // execute statement
             return pStmt.executeUpdate() > 0;
@@ -140,8 +123,6 @@ public class CustomerDB implements CustomerRepository {
     // get customer based on name or address
     @Override
     public ArrayList<Customer> searchCustomer(String search) {
-        // create arraylist to hold search results
-        ArrayList<Customer> custList = new ArrayList<>();
         
         try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
             // create prepared statemnt
@@ -158,14 +139,12 @@ public class CustomerDB implements CustomerRepository {
             ResultSet rs = pStmt.executeQuery();
             
             // process the results of query
-            while (rs.next()) {
-                custList.add(mapCustomer(rs));
-            }
+            return mapRows(rs);
         }
         catch (SQLException e) {
             e.printStackTrace();
         }
-        return custList;
+        return new ArrayList<>();
     }
     
     // delete a customer from the database
@@ -187,17 +166,27 @@ public class CustomerDB implements CustomerRepository {
         }
     }
     
-    private Customer mapCustomer(ResultSet rs) throws SQLException {
+    private void fillUpdateStatement(PreparedStatement pStmt, Customer customer) throws SQLException {
         
-        // extract customer fields from result set to build customer
-        int id = rs.getInt("customerID");
-        String name = rs.getString("name");
-        String address = rs.getString("address");
-        YardType yardType = YardType.fromString(rs.getString("yardType"));
-        double width = rs.getDouble("width");
-        double length = rs.getDouble("length");
-        double totalCost = rs.getDouble("totalCost");
+        pStmt.setString(1, customer.getName());
+        pStmt.setString(2, customer.getAddress());
+        pStmt.setString(3, customer.getYardType().name());
+        pStmt.setDouble(4, customer.getWidth());
+        pStmt.setDouble(5, customer.getLength());
+        pStmt.setDouble(6, customer.getTotalCost());
+        pStmt.setInt(7, customer.getCustomerID());
+    }
+    
+    // helper method for mapping rows
+    private ArrayList<Customer> mapRows(ResultSet rs) throws SQLException {
         
-         return new Customer(id, name, address, yardType, width, length, totalCost);
+        ArrayList<Customer> custList = new ArrayList<>();
+        int rowNum = 0;
+        
+        while(rs.next()) {
+            custList.add(CustomerMapper.mapRow(rs, rowNum));
+            rowNum ++;
+        }
+        return custList;
     }
 }
