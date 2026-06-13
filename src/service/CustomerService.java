@@ -5,6 +5,7 @@
 package service;
 
 import dao.CustomerDB;
+import dao.CustomerRepository;
 import enums.SortOption;
 import java.util.ArrayList;
 import model.Customer;
@@ -17,36 +18,36 @@ import enums.YardType;
 public class CustomerService {
     
     // attributes
-    private final CustomerDB customerDB;
+    private final CustomerRepository customerRepository;
     
     // constructor
     public CustomerService() {
-        customerDB = new CustomerDB();
+        customerRepository = new CustomerDB();
     }
     
     // methods for customer service
     public boolean addCustomer(Customer customer) {
-        return customerDB.add(customer);
+        return customerRepository.add(customer);
     }
     
     public ArrayList<Customer> getAllCustomers() {
-        return customerDB.getList();
+        return customerRepository.getAll();
     }
     
     public ArrayList<Customer> sortCustomersBasedOnAttribute(SortOption option) {
-        return customerDB.sortCustomers(option);
+        return customerRepository.sortCustomers(option);
     }
     
     public ArrayList<Customer> searchCustomerByNameOrAddress(String search) {
-        return customerDB.searchCustomer(search);
+        return customerRepository.searchCustomer(search);
     }
     
     public boolean editCustomer(Customer customer) {
-        return customerDB.updateCustomer(customer);
+        return customerRepository.updateCustomer(customer);
     }
     
     public boolean deleteCustomer(int id) {
-        return customerDB.delete(id);
+        return customerRepository.delete(id);
     }
     
     public double calculateTotalCost(YardType yardType, double width, double length) {

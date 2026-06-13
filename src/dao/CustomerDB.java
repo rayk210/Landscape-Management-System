@@ -9,152 +9,116 @@ import model.Customer;
 import enums.SortOption;
 import java.sql.*;
 import java.util.ArrayList;
-import javax.swing.JOptionPane;
 import enums.YardType;
 /**
  *
  * @author rayk2
  */
-public class CustomerDB {
+public class CustomerDB implements CustomerRepository {
     
     // attributes
     private static final String URL = "jdbc:mysql://localhost:3306/landscaping";
     private static final String USER_NAME = "root";
     private static final String PASSWORD = "devry123";
     
-    Connection conn;
+    private static final String INSERT_CUSTOMER = "INSERT INTO customers (name, address, yardType, width, length, totalCost) "
+                                                  + "VALUES (?,?,?,?,?,?)";
+    private static final String GET_ALL_CUSTOMERS = "SELECT * FROM customers";
+    private static final String SEARCH_CUSTOMERS = "SELECT * FROM customers WHERE name LIKE ? OR address LIKE ?";
+    private static final String SORT_CUSTOMERS = "SELECT * FROM customers ORDER BY ";
+    private static final String UPDATE_CUSTOMER = "UPDATE customers SET name = ?, address = ?, yardType = ?, width = ?, length = ?, totalCost = ? WHERE customerID = ?";
+    private static final String DELETE_CUSTOMER = "DELETE FROM customers WHERE customerID = ?";
     
     // insert customer into Database
-    public boolean add(Customer cust) {
+    @Override
+    public boolean add(Customer customer) {
         
-        try {
-            // establish connection
-            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-            
-            // create sql query
-            String sqlQuery = "INSERT INTO customers (name, address, yardType, width, length, totalCost) VALUES (?,?,?,?,?,?)";
-            
-            // create prepared statement
-            PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
-            
+        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+             
+            // create prepared statment
+            PreparedStatement pStmt = conn.prepareStatement(INSERT_CUSTOMER))
+        {
             // set values for statement
-            pStmt.setString(1, cust.getName());
-            pStmt.setString(2, cust.getAddress());
-            pStmt.setString(3, cust.getYardType().toString());
-            pStmt.setDouble(4, cust.getWidth());
-            pStmt.setDouble(5, cust.getLength());
-            pStmt.setDouble(6, cust.getTotalCost());
+            pStmt.setString(1, customer.getName());
+            pStmt.setString(2, customer.getAddress());
+            pStmt.setString(3, customer.getYardType().name());
+            pStmt.setDouble(4, customer.getWidth());
+            pStmt.setDouble(5, customer.getLength());
+            pStmt.setDouble(6, customer.getTotalCost());
             
             // execute statement
-            pStmt.executeUpdate();
+            return pStmt.executeUpdate() > 0;
             
-            // close connection
-            conn.close();
-        }
-        catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            e.printStackTrace();
             return false;
         }
-        return true;
     }
     
-    // retrieve a list of customers from Database
-    public ArrayList<Customer> getList() {
+    // retrieve all customers from Database
+    @Override
+    public ArrayList<Customer> getAll() {
         
         // create array list to hold query results
         ArrayList<Customer> custList = new ArrayList<>();
         
-        try {
-            // establish connection
-            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-            
-            // create sql query
-            String sqlStmt = "SELECT * FROM customers";
-            
+        // establish connection
+        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+                
             // create statement
             Statement stmt = conn.createStatement();
-            
+                
             // execute statement
-            ResultSet rs = stmt.executeQuery(sqlStmt);
+            ResultSet rs = stmt.executeQuery(GET_ALL_CUSTOMERS))
+        {
             
             // process the results from the query
             while(rs.next()) {
-                int customerID = rs.getInt("customerID");
-                String name = rs.getString("name");
-                String address = rs.getString("address");
-                YardType yardType = YardType.fromString(rs.getString("yardType"));
-                double width = rs.getDouble("width");
-                double length = rs.getDouble("length");
-                double totalCost = rs.getDouble("totalCost");
-                
-                // add elements to array list
-                custList.add(new Customer(customerID, name, address, yardType, width, length, totalCost));
+                custList.add(mapCustomer(rs));
             }
-            // close connection
-            conn.close();
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database", "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
         return custList;
     }
     
     // sort customer based on name, yard type, or total cost
+    @Override
     public ArrayList<Customer> sortCustomers(SortOption option) {
         // create array list to hold results
         ArrayList<Customer> custList = new ArrayList<>();
         
-        try {
-            // establish connection
-            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-            
-            // create sql query based on chosen option of sorting
-            String sqlQuery = "SELECT * FROM customers ORDER BY " + option.getColumn();
-            
+        // create sql query based on chosen option of sorting
+        //String sqlQuery = SORT_CUSTOMERS + option.getColumn();
+        
+        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
             // create statement
             Statement stmt = conn.createStatement();
-            
+                
             // execute statement
-            ResultSet rs = stmt.executeQuery(sqlQuery);
-            
+            ResultSet rs = stmt.executeQuery(SORT_CUSTOMERS + option.getColumn()))
+        {
             // process results of the query
             while (rs.next()) {
-                
-                // extract data from result set
-                int id = rs.getInt("customerID");
-                String name = rs.getString("name");
-                String address = rs.getString("address");
-                YardType yardType = YardType.fromString(rs.getString("yardType"));
-                double width = rs.getDouble("width");
-                double length = rs.getDouble("length");
-                double totalCost = rs.getDouble("totalCost");
-                
-                // add data to array list and build customers
-                custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
+                custList.add(mapCustomer(rs));
             }
-            // close connection
-            conn.close();
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
         // return customer array list
         return custList;
     }
     
     // update customer based on customer ID
+    @Override
     public boolean updateCustomer(Customer customer) {
         
-        try {
-            // establish connection
-            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-            
-            // create sql query
-            String sqlQuery = "UPDATE customers SET name = ?, address = ?, yardType = ?, width = ?, length = ?, totalCost = ? WHERE customerID = ?";
-            
+        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
             // make prepared statement
-            PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
-            
+            PreparedStatement pStmt = conn.prepareStatement(UPDATE_CUSTOMER))
+        {
             // set value for prepared statment
             pStmt.setString(1, customer.getName());
             pStmt.setString(2, customer.getAddress());
@@ -165,33 +129,24 @@ public class CustomerDB {
             pStmt.setInt(7, customer.getCustomerID());
             
             // execute statement
-            pStmt.execute();
-            
-            // close connection
-            conn.close();
+            return pStmt.executeUpdate() > 0;
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
             return false;
         }
-        return true;
     }
     
     // get customer based on name or address
+    @Override
     public ArrayList<Customer> searchCustomer(String search) {
         // create arraylist to hold search results
         ArrayList<Customer> custList = new ArrayList<>();
         
-        try {
-            // establish connection
-            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-            
-            // create sql statement
-            String sqlQuery = "SELECT * FROM customers WHERE name LIKE ? OR address LIKE ?";
-            
+        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
             // create prepared statemnt
-            PreparedStatement pStmt = conn.prepareStatement(sqlQuery);
-            
+            PreparedStatement pStmt = conn.prepareStatement(SEARCH_CUSTOMERS))
+        {
             // wildcard string format for searches
             String wildCard = "%" + search + "%";
             
@@ -204,54 +159,45 @@ public class CustomerDB {
             
             // process the results of query
             while (rs.next()) {
-                
-                int id = rs.getInt("customerID");
-                String name = rs.getString("name");
-                String address = rs.getString("address");
-                YardType yardType = YardType.fromString(rs.getString("yardType"));
-                double width = rs.getDouble("width");
-                double length = rs.getDouble("length");
-                double totalCost = rs.getDouble("totalCost");
-                
-                // fill array list with results
-                custList.add(new Customer(id, name, address, yardType, width, length, totalCost));
+                custList.add(mapCustomer(rs));
             }
-            // close connection
-            conn.close();
         }
-        catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Could not connect to database!", "Error", JOptionPane.ERROR_MESSAGE);
+        catch (SQLException e) {
+            e.printStackTrace();
         }
-        // return customer list
         return custList;
     }
     
     // delete a customer from the database
+    @Override
     public boolean delete(int customerID) {
         
-        try {
-            // establish connection
-            conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-            
-            // create sql query
-            String sqlStmt = "DELETE FROM customers WHERE customerID = ?";
-            
-            // create preparedstatment
-            PreparedStatement pStmt = conn.prepareStatement(sqlStmt);
-            
+        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+             PreparedStatement pStmt = conn.prepareStatement(DELETE_CUSTOMER))
+        {
             // set values for statment
             pStmt.setInt(1, customerID);
             
             // execute statement
-            pStmt.executeUpdate();
-            
-            // close connection
-            conn.close();
+            return pStmt.executeUpdate() > 0;
         }
         catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Failed to connect to database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
             return false;
         }
-        return true;
+    }
+    
+    private Customer mapCustomer(ResultSet rs) throws SQLException {
+        
+        // extract customer fields from result set to build customer
+        int id = rs.getInt("customerID");
+        String name = rs.getString("name");
+        String address = rs.getString("address");
+        YardType yardType = YardType.fromString(rs.getString("yardType"));
+        double width = rs.getDouble("width");
+        double length = rs.getDouble("length");
+        double totalCost = rs.getDouble("totalCost");
+        
+         return new Customer(id, name, address, yardType, width, length, totalCost);
     }
 }

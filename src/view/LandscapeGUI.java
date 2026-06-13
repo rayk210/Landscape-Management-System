@@ -5,6 +5,7 @@ import util.DataIO;
 import model.Customer;
 import enums.YardType;
 import enums.SortOption;
+import util.ValidationUtil;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -992,93 +993,56 @@ public class LandscapeGUI extends javax.swing.JFrame {
     }
 
     private boolean validateFields() {
-        
-        // verify radio button is selected
-        if (bgYardType.getSelection() == null) {
-            JOptionPane.showMessageDialog(this, "Yard type is required", "Error", JOptionPane.ERROR_MESSAGE);
+        // check if yard type has been selected
+        if (rdoGrass.isSelected() == false && rdoGravel.isSelected() == false) {
+            JOptionPane.showMessageDialog(this, "Yard type must be selected!", "Error", JOptionPane.ERROR_MESSAGE);
+            
+            // redirect user to yard selection frame
+            tabMain.setSelectedIndex(0);
+            
             return false;
         }
         
-        // verify text fields are not empty
-        JTextField[] fields = {txtName, txtAddress, txtWidth, txtLength};
+        // validate required fields
+        JTextField[] txtFields = {txtName, txtAddress, txtWidth, txtLength};
         String[] names = {"Name", "Address", "Width", "Length"};
         
+        for (int i = 0; i < txtFields.length; i++) {
+            if (!validateEmptyField(txtFields[i], names[i])) {
+                return false;
+            }
+        }
+        
+        // validate text requirements
+        if (!ValidationUtil.isValidName(txtName.getText())) {
+            showError("Name cannot contain special characters", txtName);
+            return false;
+        }
+        
+        JTextField[] fields = {txtWidth, txtLength};
+        String[] txtNames = {"Width", "Length"};
+        
         for (int i = 0; i < fields.length; i++) {
-            if (fields[i].getText().isEmpty()) {
-                showError(names[i] + " is required", fields[i]);
+            if (!ValidationUtil.isValidNumberOrDecimal(fields[i].getText())) {
+                showError(txtNames[i] + " must be numeric or decimal", fields[i]);
                 return false;
             }
         }
         
-        // verify name contains only letters
-        if (txtName.getText().matches(".*[^A-Za-z ].*")) {
-            JOptionPane.showMessageDialog(this, "Name must be characters", "Error", JOptionPane.ERROR_MESSAGE);
-            txtName.setText("");
-            txtName.requestFocus();
+        if (!ValidationUtil.isValidAddress(txtAddress.getText())) {
+            showError("Address must be greater than 5 characters", txtAddress);
             return false;
         }
         
-        // validate that width and length are postive numbers or decimals
-        JTextField[] jFields = {txtWidth, txtLength};
-        String[] jNames = {"Width", "Length"};
-        
-        for (int i = 0; i < jFields.length; i++) {
-            
-            // get text from fields
-            String field = jFields[i].getText().trim(); // trim removes leading and trailing spaces
-            
-            if (!field.matches("\\d+(\\.\\d+)?")) {
-                showError(jNames[i] + " must be numeric or decimal", jFields[i]);
+        // validate numeric requirements
+        // validate if width and length are greater than zero
+        for (int i = 0; i < fields.length; i++) {
+            if (!ValidationUtil.isGreaterThanZero(Double.parseDouble(fields[i].getText()))) {
+                showError(txtNames[i] + " must be greater than zero", fields[i]);
                 return false;
             }
         }
-        
-        // check if address is greater than 5 characters
-        if (txtAddress.getText().length() <= 5) {
-            JOptionPane.showMessageDialog(this, "Address must be greater than 5 characters", "Error", JOptionPane.ERROR_MESSAGE);
-            txtAddress.setText("");
-            txtAddress.requestFocusInWindow();
-            return false;
-        }
-        
-        // verfiy that width and length are greater than 0
-        if (Double.parseDouble(txtWidth.getText()) <= 0) {
-            JOptionPane.showMessageDialog(this, "Width must be greater than 0", "Error", JOptionPane.ERROR_MESSAGE);
-            txtWidth.setText("");
-            txtWidth.requestFocusInWindow();
-            return false;
-        }
-        
-        // verfiy that width and length are greater than 0
-        if (Double.parseDouble(txtLength.getText()) <= 0) {
-            JOptionPane.showMessageDialog(this, "Length must be greater than 0", "Error", JOptionPane.ERROR_MESSAGE);
-            txtLength.setText("");
-            txtLength.requestFocusInWindow();
-            return false;
-        }
-        
-        // verify that width and length are numeric
-        try {
-            double width = Double.parseDouble(txtWidth.getText());
-        }
-        catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Width must be numeric", "Error", JOptionPane.ERROR_MESSAGE);
-            txtWidth.setText("");
-            txtWidth.requestFocusInWindow();
-            return false;
-        }
-        
-        // verify that width and length are numeric
-        try {
-            double length = Double.parseDouble(txtLength.getText());
-        }
-        catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Length must be numeric", "Error", JOptionPane.ERROR_MESSAGE);
-            txtLength.setText("");
-            txtLength.requestFocusInWindow();
-            return false;
-        }
-        
+        // return true
         return true;
     }
 
@@ -1186,7 +1150,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
     }
     
     // create customer table models
-    public void createCustomerTableModel(ArrayList<Customer> custList) {
+    private void createCustomerTableModel(ArrayList<Customer> custList) {
         
         // create columns for table model
         String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
@@ -1212,5 +1176,13 @@ public class LandscapeGUI extends javax.swing.JFrame {
         }
         // set customer table model as model for JTable
         tblCustomerTable.setModel(customerTableModel);
+    }
+    
+    private boolean validateEmptyField(JTextField txtField, String name) {
+        if (ValidationUtil.isEmpty(txtField.getText())) {
+            showError(name + " is required", txtField);
+            return false;
+        }
+        return true;
     }
 }
