@@ -771,6 +771,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         dialog.setLocationRelativeTo(this);
         
+        
         // create panel as a container to hold labels, text fields, and buttons
         JPanel pnl = new JPanel(new GridLayout(7, 2));
         

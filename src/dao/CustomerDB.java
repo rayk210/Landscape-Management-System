@@ -7,20 +7,17 @@ package dao;
 
 import dao.mapper.CustomerRowMapper;
 import dao.mapper.RowMapper;
+import util.AppLogger;
 import model.Customer;
 import enums.SortOption;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
 /**
  *
  * @author rayk2
  */
 public class CustomerDB implements CustomerRepository {
-    
-    // attributes
-    private static final String URL = "jdbc:mysql://localhost:3306/landscaping";
-    private static final String USER_NAME = "root";
-    private static final String PASSWORD = "devry123";
     
     private static final String INSERT_CUSTOMER = "INSERT INTO customers (name, address, yardType, width, length, totalCost) "
                                                   + "VALUES (?,?,?,?,?,?)";
@@ -36,7 +33,9 @@ public class CustomerDB implements CustomerRepository {
     @Override
     public boolean add(Customer customer) {
         
-        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+        AppLogger.getLogger().log(Level.INFO, "Inserting customer: " + customer.getName());
+        
+        try (Connection conn = DBConnect.getConnection();
              
             // create prepared statment
             PreparedStatement pStmt = conn.prepareStatement(INSERT_CUSTOMER))
@@ -50,10 +49,14 @@ public class CustomerDB implements CustomerRepository {
             pStmt.setDouble(6, customer.getTotalCost());
             
             // execute statement
-            return pStmt.executeUpdate() > 0;
+            int rowsAffected = pStmt.executeUpdate();
+            
+            AppLogger.getLogger().log(Level.INFO, "Successfully inserted customer: " + customer.getName() + "." + " Rows affected: " + rowsAffected);
+            
+            return rowsAffected > 0;
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            AppLogger.getLogger().log(Level.SEVERE, "Failed to insert customer.", e);
             return false;
         }
     }
@@ -62,20 +65,19 @@ public class CustomerDB implements CustomerRepository {
     @Override
     public ArrayList<Customer> getAll() {
         
-        // establish connection
-        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-                
-            // create statement
-            Statement stmt = conn.createStatement();
-                
-            // execute statement
-            ResultSet rs = stmt.executeQuery(GET_ALL_CUSTOMERS))
+        AppLogger.getLogger().log(Level.INFO, "Retrieving all customers.");
+        
+        try (Connection conn = DBConnect.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(GET_ALL_CUSTOMERS))
         {
-            // process the results from the query
-            return mapRows(rs);
+                 ArrayList<Customer> custList = mapRows(rs);
+                 AppLogger.getLogger().log(Level.INFO, "Retrieved " + custList.size() + " customers.");
+                 
+                 return custList;
         }
         catch (SQLException e) {
-            e.printStackTrace();
+                AppLogger.getLogger().log(Level.SEVERE, "Failed to retrieve customers.", e);
         }
         return new ArrayList<>();
     }
@@ -84,7 +86,9 @@ public class CustomerDB implements CustomerRepository {
     @Override
     public ArrayList<Customer> sortCustomers(SortOption option) {
         
-        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+        AppLogger.getLogger().log(Level.INFO, "Sorting customers by " + option.name());
+        
+        try (Connection conn = DBConnect.getConnection();
             // create statement
             Statement stmt = conn.createStatement();
                 
@@ -92,10 +96,14 @@ public class CustomerDB implements CustomerRepository {
             ResultSet rs = stmt.executeQuery(SORT_CUSTOMERS + option.getColumn()))
         {
             // process results of the query
-            return mapRows(rs);
+            ArrayList<Customer> custList = mapRows(rs);
+            
+            AppLogger.getLogger().log(Level.INFO, "Sorted customers by " + option.name());
+            
+            return custList;
         }
         catch (SQLException e) {
-            e.printStackTrace();
+            AppLogger.getLogger().log(Level.SEVERE, "Failed to sort customers.", e);
         }
         // return customer array list
         return new ArrayList<>();
@@ -105,17 +113,23 @@ public class CustomerDB implements CustomerRepository {
     @Override
     public boolean updateCustomer(Customer customer) {
         
-        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+        AppLogger.getLogger().log(Level.INFO, "Updating customer ID: " + customer.getCustomerID() + ".");
+        
+        try (Connection conn = DBConnect.getConnection();
             // make prepared statement
             PreparedStatement pStmt = conn.prepareStatement(UPDATE_CUSTOMER))
         {
             fillUpdateStatement(pStmt, customer);
             
             // execute statement
-            return pStmt.executeUpdate() > 0;
+            int rowsAffected =  pStmt.executeUpdate();
+            
+            AppLogger.getLogger().log(Level.INFO, "Successfully updated customer ID: " + customer.getCustomerID() + "." + " Rows affected: " + rowsAffected);
+            
+            return rowsAffected > 0;
         }
         catch (SQLException e) {
-            e.printStackTrace();
+            AppLogger.getLogger().log(Level.SEVERE, "Failed to update customer", e);
             return false;
         }
     }
@@ -123,8 +137,11 @@ public class CustomerDB implements CustomerRepository {
     // get customer based on name or address
     @Override
     public ArrayList<Customer> searchCustomer(String search) {
+        String fmt = "'" + search + "'";
         
-        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+        AppLogger.getLogger().log(Level.INFO, "Searching for customer. " + "Keyword: " + fmt);
+        
+        try (Connection conn = DBConnect.getConnection();
             // create prepared statemnt
             PreparedStatement pStmt = conn.prepareStatement(SEARCH_CUSTOMERS))
         {
@@ -139,10 +156,14 @@ public class CustomerDB implements CustomerRepository {
             ResultSet rs = pStmt.executeQuery();
             
             // process the results of query
-            return mapRows(rs);
+            ArrayList<Customer> custList =  mapRows(rs);
+            
+            AppLogger.getLogger().log(Level.INFO, custList.size() + " customers found.");
+            
+            return custList;
         }
         catch (SQLException e) {
-            e.printStackTrace();
+            AppLogger.getLogger().log(Level.SEVERE, "Failed to search for customers", e);
         }
         return new ArrayList<>();
     }
@@ -151,17 +172,23 @@ public class CustomerDB implements CustomerRepository {
     @Override
     public boolean delete(int customerID) {
         
-        try (Connection conn = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+        AppLogger.getLogger().log(Level.INFO, "Deleting customer ID: " + customerID);
+        
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement pStmt = conn.prepareStatement(DELETE_CUSTOMER))
         {
             // set values for statment
             pStmt.setInt(1, customerID);
             
             // execute statement
-            return pStmt.executeUpdate() > 0;
+            int rowsAffected =  pStmt.executeUpdate();
+            
+            AppLogger.getLogger().log(Level.INFO, "Successfully deleted customer ID: " + customerID + "." + " Rows affected: " + rowsAffected);
+            
+            return rowsAffected > 0;
         }
         catch (SQLException e) {
-            e.printStackTrace();
+            AppLogger.getLogger().log(Level.SEVERE, "Failed to delete customer.", e);
             return false;
         }
     }
