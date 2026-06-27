@@ -5,6 +5,8 @@ dist/
 # NetBeans project settings (local user, not source code)
 nbproject/private/
 
+**/database.properties
+
 # compiled Java classes
 *.class
 

@@ -5,6 +5,8 @@
 package dao;
 
 import java.sql.*;
+import config.ConfigLoader;
+import config.DatabaseConfig;
 
 /**
  *
@@ -12,13 +14,10 @@ import java.sql.*;
  */
 public final class DBConnect {
     
-    private static final String URL = "jdbc:mysql://localhost:3306/landscaping";
-    private static final String USER_NAME = "root";
-    private static final String PASSWORD = "devry123";
-    
     private DBConnect() {}
     
-    public static Connection getConnection()throws SQLException {
-        return DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+    public static Connection getConnection() throws SQLException {
+        DatabaseConfig config = ConfigLoader.getInstance().getProperty();
+        return DriverManager.getConnection(config.getUrl(), config.getUsername(), config.getPassword());
     }
 }
