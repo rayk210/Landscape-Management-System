@@ -3,6 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
  */
 package dao;
+
+import java.sql.Connection;
 import java.util.ArrayList;
 import model.Customer;
 import enums.SortOption;
@@ -14,7 +16,7 @@ import enums.SortOption;
  */
 public interface CustomerRepository {
     
-    boolean add(Customer customer);
+    void add(Connection conn, Customer customer);
     
     ArrayList<Customer> getAll();
     
@@ -22,7 +24,7 @@ public interface CustomerRepository {
     
     ArrayList<Customer> searchCustomer(String search);
     
-    boolean updateCustomer(Customer customer);
+    void updateCustomer(Connection conn, Customer customer);
     
-    boolean delete(int id);
+    void delete(Connection conn, int id);
 }

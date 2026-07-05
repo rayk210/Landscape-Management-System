@@ -8,6 +8,7 @@ package dao;
 import dao.mapper.CustomerRowMapper;
 import dao.mapper.RowMapper;
 import util.AppLogger;
+import exceptions.DatabaseException;
 import model.Customer;
 import enums.SortOption;
 import java.sql.*;
@@ -31,14 +32,11 @@ public class CustomerDB implements CustomerRepository {
     
     // insert customer into Database
     @Override
-    public boolean add(Customer customer) {
+    public void add(Connection conn, Customer customer) {
         
         AppLogger.getLogger().log(Level.INFO, "Inserting customer: " + customer.getName());
         
-        try (Connection conn = DBConnect.getConnection();
-             
-            // create prepared statment
-            PreparedStatement pStmt = conn.prepareStatement(INSERT_CUSTOMER))
+        try (PreparedStatement pStmt = conn.prepareStatement(INSERT_CUSTOMER))
         {
             // set values for statement
             pStmt.setString(1, customer.getName());
@@ -53,11 +51,8 @@ public class CustomerDB implements CustomerRepository {
             
             AppLogger.getLogger().log(Level.INFO, "Successfully inserted customer: " + customer.getName() + "." + " Rows affected: " + rowsAffected);
             
-            return rowsAffected > 0;
-            
         } catch (SQLException e) {
-            AppLogger.getLogger().log(Level.SEVERE, "Failed to insert customer.", e);
-            return false;
+            throw new DatabaseException(e);
         }
     }
     
@@ -77,9 +72,8 @@ public class CustomerDB implements CustomerRepository {
                  return custList;
         }
         catch (SQLException e) {
-                AppLogger.getLogger().log(Level.SEVERE, "Failed to retrieve customers.", e);
+                throw new DatabaseException(e);
         }
-        return new ArrayList<>();
     }
     
     // sort customer based on name, yard type, or total cost
@@ -103,21 +97,17 @@ public class CustomerDB implements CustomerRepository {
             return custList;
         }
         catch (SQLException e) {
-            AppLogger.getLogger().log(Level.SEVERE, "Failed to sort customers.", e);
+            throw new DatabaseException(e);
         }
-        // return customer array list
-        return new ArrayList<>();
     }
     
     // update customer based on customer ID
     @Override
-    public boolean updateCustomer(Customer customer) {
+    public void updateCustomer(Connection conn, Customer customer) {
         
         AppLogger.getLogger().log(Level.INFO, "Updating customer ID: " + customer.getCustomerID() + ".");
         
-        try (Connection conn = DBConnect.getConnection();
-            // make prepared statement
-            PreparedStatement pStmt = conn.prepareStatement(UPDATE_CUSTOMER))
+        try (PreparedStatement pStmt = conn.prepareStatement(UPDATE_CUSTOMER))
         {
             fillUpdateStatement(pStmt, customer);
             
@@ -125,12 +115,9 @@ public class CustomerDB implements CustomerRepository {
             int rowsAffected =  pStmt.executeUpdate();
             
             AppLogger.getLogger().log(Level.INFO, "Successfully updated customer ID: " + customer.getCustomerID() + "." + " Rows affected: " + rowsAffected);
-            
-            return rowsAffected > 0;
         }
         catch (SQLException e) {
-            AppLogger.getLogger().log(Level.SEVERE, "Failed to update customer", e);
-            return false;
+            throw new DatabaseException(e);
         }
     }
     
@@ -142,7 +129,7 @@ public class CustomerDB implements CustomerRepository {
         AppLogger.getLogger().log(Level.INFO, "Searching for customer. " + "Keyword: " + fmt);
         
         try (Connection conn = DBConnect.getConnection();
-            // create prepared statemnt
+            // create prepared statement
             PreparedStatement pStmt = conn.prepareStatement(SEARCH_CUSTOMERS))
         {
             // wildcard string format for searches
@@ -163,19 +150,17 @@ public class CustomerDB implements CustomerRepository {
             return custList;
         }
         catch (SQLException e) {
-            AppLogger.getLogger().log(Level.SEVERE, "Failed to search for customers", e);
+            throw new DatabaseException(e);
         }
-        return new ArrayList<>();
     }
     
     // delete a customer from the database
     @Override
-    public boolean delete(int customerID) {
+    public void delete(Connection conn, int customerID) {
         
         AppLogger.getLogger().log(Level.INFO, "Deleting customer ID: " + customerID);
         
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement pStmt = conn.prepareStatement(DELETE_CUSTOMER))
+        try (PreparedStatement pStmt = conn.prepareStatement(DELETE_CUSTOMER))
         {
             // set values for statment
             pStmt.setInt(1, customerID);
@@ -184,12 +169,9 @@ public class CustomerDB implements CustomerRepository {
             int rowsAffected =  pStmt.executeUpdate();
             
             AppLogger.getLogger().log(Level.INFO, "Successfully deleted customer ID: " + customerID + "." + " Rows affected: " + rowsAffected);
-            
-            return rowsAffected > 0;
         }
         catch (SQLException e) {
-            AppLogger.getLogger().log(Level.SEVERE, "Failed to delete customer.", e);
-            return false;
+            throw new DatabaseException(e);
         }
     }
     

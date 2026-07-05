@@ -21,33 +21,35 @@ public final class ConfigLoader {
     private final DatabaseConfig config;
     
     private ConfigLoader() {
-        
+        // object representing a presistant set of properties
         Properties properties = new Properties();
         
-        try (InputStream stream = ConfigLoader.class.getClassLoader().getResourceAsStream("config/database.properties"))
+        // create a file object and open an input stream for reading
+        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream("config/database.properties"))
         {
-            if (stream == null) {
-                throw new IOException("Unable to find class path");
+            // check if classpath is null
+            if (input == null) {
+                throw new IOException("Cannot find database configuration classpath");
             }
             
-            // load properties from stream
-            properties.load(stream);
+            // load properties of the file from inputstream
+            properties.load(input);
             
             // extract properties from file
             String dbUrl = properties.getProperty("db.url");
             String dbName = properties.getProperty("db.username");
             String dbPassword = properties.getProperty("db.password");
             
-            // assign properties to temp database config object
+            // create new Database config object with extracted properties
             config = new DatabaseConfig(dbUrl, dbName, dbPassword);
-            
         }
         catch (IOException ex) {
             AppLogger.getLogger().log(Level.SEVERE, "Unable to read database configuration file", ex);
-            throw new RuntimeException("Unable to read database configuration file");
+            throw new RuntimeException("Error. Unable to read database configuration file");
         }
     }
     
+    // ensure one instance is created throughout the application
     public static ConfigLoader getInstance() {
         if (instance == null) {
             instance = new ConfigLoader();

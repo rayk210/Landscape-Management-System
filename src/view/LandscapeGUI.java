@@ -2,6 +2,10 @@ package view;
 
  
 import util.DataIO;
+import util.AppLogger;
+import java.util.logging.Level;
+import exceptions.ApplicationException;
+import exceptions.*;
 import model.Customer;
 import enums.YardType;
 import enums.SortOption;
@@ -656,18 +660,22 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // get customers id
         int customerID = cust.getCustomerID();
         
-        // delete customer by id
-        boolean deletedCust = service.deleteCustomer(customerID);
+        try {
+            // delete customer by id
+            service.deleteCustomer(customerID);
         
-        if (deletedCust) {
-            JOptionPane.showMessageDialog(this, "Customer successfully deleted!");
+            // clear customer details text area
+            txaCustomerDetails.setText("");
+        
+            // re-load customer list
+            loadList();
+            
+            JOptionPane.showMessageDialog(this, "Successfully deleted customer!");
         }
-        
-        // clear customer details text area
-        txaCustomerDetails.setText("");
-        
-        // re-load customer list
-        loadList();
+        catch (DatabaseException ex) {
+            AppLogger.getLogger().log(Level.SEVERE, ex.getCode().getMessage(), ex);
+            JOptionPane.showMessageDialog(this, "Could not delete customer: " + ex.getCode().getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void btnLoadListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadListActionPerformed
@@ -740,19 +748,24 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // create array list to hold query results
         ArrayList<Customer> custList = new ArrayList<>();
         
-        // search for customer by name or address and save results into array list
-        custList = service.searchCustomerByNameOrAddress(search);
+        try {
+            // search for customer by name or address and save results into array list
+            custList = service.searchCustomerByNameOrAddress(search);
         
-        // if results are empty, display message
-        if (custList.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No customers were found");
+            // show table model containing search results
+            createCustomerTableModel(custList);
+        
+            // clear text field for next search
+            txtSearch.setText("");
         }
-        
-        // show table model containing search results
-        createCustomerTableModel(custList);
-        
-        // clear text field for next search
-        txtSearch.setText("");
+        catch (DatabaseException ex) {
+            AppLogger.getLogger().log(Level.SEVERE, ex.getCode().getMessage(), ex);
+            JOptionPane.showMessageDialog(this, "The database is not available");
+        }
+        catch (CustomerNotFoundException ex) {
+            AppLogger.getLogger().log(Level.WARNING, "No results for customer search");
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
     }//GEN-LAST:event_btnSearchActionPerformed
 
     private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
@@ -852,18 +865,22 @@ public class LandscapeGUI extends javax.swing.JFrame {
                     return;
                 }
                 
-                // call service to update customer information
-                boolean custUpdated = service.editCustomer(updatedCustomer);
+                try {
+                    // call service to update customer information
+                    service.editCustomer(updatedCustomer);
+                
+                    // re-load customer JList and JTable
+                    loadList();
+                
+                    // close JDialog
+                    dialog.dispose();
                     
-                if (custUpdated) {
-                    JOptionPane.showMessageDialog(null, "Customer update successful!");
-                } 
-                
-                // re-load customer JList and JTable
-                loadList();
-                
-                // close JDialog
-                dialog.dispose();
+                    JOptionPane.showMessageDialog(null, "Successfully updated customer!");
+                }
+                catch (DatabaseException ex) {
+                    AppLogger.getLogger().log(Level.SEVERE, ex.getCode().getMessage(), ex);
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         
@@ -885,10 +902,16 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // create array list to hold customers
         ArrayList<Customer> custList = new ArrayList<>();
         
-        custList = service.sortCustomersBasedOnAttribute(option);
+        try {
+            custList = service.sortCustomersBasedOnAttribute(option);
         
-        // pass array list to create customer table model
-        createCustomerTableModel(custList);
+            // pass array list to create customer table model
+            createCustomerTableModel(custList);
+        }
+        catch (ApplicationException ex) {
+            AppLogger.getLogger().log(Level.SEVERE, ex.getCode().getMessage(), ex);
+            JOptionPane.showMessageDialog(this, "Cannot sort customers: " + ex.getMessage());
+        }
     }//GEN-LAST:event_cboSortOptionActionPerformed
 
     /**
@@ -1115,39 +1138,50 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // create customer
         Customer cust = createCustomer();
         
-        // add customer
-        boolean custSubmitted = service.addCustomer(cust);
+        try {
+            // add customer
+            service.addCustomer(cust);
         
-        if (custSubmitted) {
-            JOptionPane.showMessageDialog(this, "Customer successfully submitted!");
-        }
+            // load latest customer list
+            loadList();
         
-        // load latest customer list
-        loadList();
-        
-        // reset form for next customer
-        reset();
+            // reset form for next customer
+            reset();
             
-        // move to next tab
-        tabMain.setSelectedIndex(2); 
+            // move to next tab
+            tabMain.setSelectedIndex(2); 
+            
+            JOptionPane.showMessageDialog(this, "Customer added!");
+        }
+        catch (ApplicationException ex) {
+            AppLogger.getLogger().log(Level.SEVERE, ex.getCode().getMessage(), ex);
+            JOptionPane.showMessageDialog(this, "Customer could not be added: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } 
     }
 
     private void loadList() {
-        // pull query results from DB info into array list
-        ArrayList<Customer> custList = service.getAllCustomers();
         
-        // clear model list
-        customerList.clear();
+        try {
+            // pull query results from DB info into array list
+            ArrayList<Customer> custList = service.getAllCustomers();
         
-        // clear customer text area
-        txaCustomerDetails.setText("");
+            // clear model list
+            customerList.clear();
         
-        // iterate through customer array list and add element to list model
-        for (Customer cust : custList) {
-            customerList.addElement(cust);
+            // clear customer text area
+            txaCustomerDetails.setText("");
+        
+            // iterate through customer array list and add element to list model
+            for (Customer cust : custList) {
+                customerList.addElement(cust);
+            }
+            // create customer table model using array list of customers
+            createCustomerTableModel(custList);
         }
-        // create customer table model using array list of customers
-        createCustomerTableModel(custList);
+        catch (ApplicationException ex) {
+            AppLogger.getLogger().log(Level.SEVERE, ex.getCode().getMessage(), ex);
+            JOptionPane.showMessageDialog(this, "Cannot load customers: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     // create customer table models

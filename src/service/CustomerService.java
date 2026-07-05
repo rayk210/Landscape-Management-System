@@ -5,7 +5,9 @@
 package service;
 
 import dao.CustomerDB;
+import util.template.*;
 import dao.CustomerRepository;
+import exceptions.CustomerNotFoundException;
 import enums.SortOption;
 import java.util.ArrayList;
 import model.Customer;
@@ -26,8 +28,10 @@ public class CustomerService {
     }
     
     // methods for customer service
-    public boolean addCustomer(Customer customer) {
-        return customerRepository.add(customer);
+    public void addCustomer(Customer customer) {
+        TransactionTemplate.run(conn -> {customerRepository.add(conn, customer);
+        return null;
+        });
     }
     
     public ArrayList<Customer> getAllCustomers() {
@@ -39,15 +43,24 @@ public class CustomerService {
     }
     
     public ArrayList<Customer> searchCustomerByNameOrAddress(String search) {
-        return customerRepository.searchCustomer(search);
+        ArrayList<Customer> custList = customerRepository.searchCustomer(search);
+        
+        if (custList.isEmpty()) {
+            throw new CustomerNotFoundException();
+        }
+        return custList;
     }
     
-    public boolean editCustomer(Customer customer) {
-        return customerRepository.updateCustomer(customer);
+    public void editCustomer(Customer customer) {
+        TransactionTemplate.run(conn -> {customerRepository.updateCustomer(conn, customer);
+        return null;
+        });
     }
     
-    public boolean deleteCustomer(int id) {
-        return customerRepository.delete(id);
+    public void deleteCustomer(int id) {
+        TransactionTemplate.run(conn -> {customerRepository.delete(conn, id);
+        return null;
+        });
     }
     
     public double calculateTotalCost(YardType yardType, double width, double length) {
