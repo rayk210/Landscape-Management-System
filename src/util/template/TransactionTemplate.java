@@ -22,7 +22,7 @@ public class TransactionTemplate {
         try {
             conn = DBConnect.getConnection();
             
-            // change default autocommit behavior to false to treat as separate transactions
+            // change default autocommit behavior to false to treat transactions as a single unit
             conn.setAutoCommit(false);
             
             // call execute() to carry out a specific task

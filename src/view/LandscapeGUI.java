@@ -1,6 +1,7 @@
 package view;
 
  
+import config.AppContainer;
 import util.DataIO;
 import util.AppLogger;
 import java.util.logging.Level;
@@ -45,6 +46,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
     // class-level variables
     DefaultListModel<Customer> customerList;
     DefaultTableModel customerTableModel;
+    
     private CustomerService service;
     
     private JTextField txtCustName, txtCustAddress, txtYardWidth, txtYardLength, txtCustTotalCost;
@@ -53,13 +55,13 @@ public class LandscapeGUI extends javax.swing.JFrame {
     /**
      * Creates new form LandscapeGUI
      */
-    public LandscapeGUI() {
+    public LandscapeGUI(CustomerService service) {
         
         // instantiate variables
+        this.service = service;
         customerList = new DefaultListModel<>();
         customerTableModel = new DefaultTableModel();
         cboYardType = new JComboBox<>(YardType.values());
-        service = new CustomerService();
         
         txtCustName = new JTextField();
         txtCustAddress = new JTextField();
@@ -765,6 +767,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
         catch (CustomerNotFoundException ex) {
             AppLogger.getLogger().log(Level.WARNING, "No results for customer search");
             JOptionPane.showMessageDialog(this, ex.getMessage());
+            txtSearch.setText("");
+            txtSearch.requestFocus();
         }
     }//GEN-LAST:event_btnSearchActionPerformed
 
@@ -935,8 +939,9 @@ public class LandscapeGUI extends javax.swing.JFrame {
         }
         //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new LandscapeGUI().setVisible(true));
+        // composition root class that creates and displays the form
+        AppContainer.start();
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1047,7 +1052,7 @@ public class LandscapeGUI extends javax.swing.JFrame {
         String[] txtNames = {"Width", "Length"};
         
         for (int i = 0; i < fields.length; i++) {
-            if (!ValidationUtil.isValidNumberOrDecimal(fields[i].getText())) {
+            if (!ValidationUtil.isValidDecimal(fields[i].getText())) {
                 showError(txtNames[i] + " must be numeric or decimal", fields[i]);
                 return false;
             }
@@ -1061,8 +1066,8 @@ public class LandscapeGUI extends javax.swing.JFrame {
         // validate numeric requirements
         // validate if width and length are greater than zero
         for (int i = 0; i < fields.length; i++) {
-            if (!ValidationUtil.isGreaterThanZero(Double.parseDouble(fields[i].getText()))) {
-                showError(txtNames[i] + " must be greater than zero", fields[i]);
+            if (!ValidationUtil.isValidNumber(Double.parseDouble(fields[i].getText()))) {
+                showError(txtNames[i] + " must be greater than zero and less than or equal to 999", fields[i]);
                 return false;
             }
         }

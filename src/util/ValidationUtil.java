@@ -26,11 +26,11 @@ public class ValidationUtil {
     }
     
     // numeric requirements
-    public static boolean isGreaterThanZero(double text) {
-        return text > 0;
+    public static boolean isValidNumber(double text) {
+        return text > 0 && text <= 999;
     }
     
-    public static boolean isValidNumberOrDecimal(String text) {
+    public static boolean isValidDecimal(String text) {
         return text.matches("\\d+(\\.\\d+)?");
     }
 }

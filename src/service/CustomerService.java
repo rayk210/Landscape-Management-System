@@ -4,10 +4,6 @@
  */
 package service;
 
-import dao.CustomerDB;
-import util.template.*;
-import dao.CustomerRepository;
-import exceptions.CustomerNotFoundException;
 import enums.SortOption;
 import java.util.ArrayList;
 import model.Customer;
@@ -17,53 +13,20 @@ import enums.YardType;
  *
  * @author rayk2
  */
-public class CustomerService {
-    
-    // attributes
-    private final CustomerRepository customerRepository;
-    
-    // constructor
-    public CustomerService() {
-        customerRepository = new CustomerDB();
-    }
+public interface CustomerService {
     
     // methods for customer service
-    public void addCustomer(Customer customer) {
-        TransactionTemplate.run(conn -> {customerRepository.add(conn, customer);
-        return null;
-        });
-    }
+    void addCustomer(Customer customer);
     
-    public ArrayList<Customer> getAllCustomers() {
-        return customerRepository.getAll();
-    }
+    ArrayList<Customer> getAllCustomers();
     
-    public ArrayList<Customer> sortCustomersBasedOnAttribute(SortOption option) {
-        return customerRepository.sortCustomers(option);
-    }
+    ArrayList<Customer> sortCustomersBasedOnAttribute(SortOption option);
     
-    public ArrayList<Customer> searchCustomerByNameOrAddress(String search) {
-        ArrayList<Customer> custList = customerRepository.searchCustomer(search);
-        
-        if (custList.isEmpty()) {
-            throw new CustomerNotFoundException();
-        }
-        return custList;
-    }
+    ArrayList<Customer> searchCustomerByNameOrAddress(String search);
     
-    public void editCustomer(Customer customer) {
-        TransactionTemplate.run(conn -> {customerRepository.updateCustomer(conn, customer);
-        return null;
-        });
-    }
+    void editCustomer(Customer customer);
     
-    public void deleteCustomer(int id) {
-        TransactionTemplate.run(conn -> {customerRepository.delete(conn, id);
-        return null;
-        });
-    }
+    void deleteCustomer(int id);
     
-    public double calculateTotalCost(YardType yardType, double width, double length) {
-        return width * length * yardType.getCostPerSqFt();
-    }
+    double calculateTotalCost(YardType yardType, double width, double length);
 }
