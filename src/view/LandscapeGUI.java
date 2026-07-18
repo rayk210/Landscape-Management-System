@@ -1196,7 +1196,12 @@ public class LandscapeGUI extends javax.swing.JFrame {
         String[] columns = {"Customer ID", "Customer Name", "Address", "Yard Type", "Width", "Length", "Total Cost"};
         
         // instantiate table model with columns
-        customerTableModel = new DefaultTableModel(columns, 0);
+        customerTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         
         // iterate through customer array list to create rows
         for (Customer cust : custList) {
